@@ -1,5 +1,6 @@
 Import "bin\bbtype.bmx"
 Import "bin\bbvkey.bmx"
+AppTitle = "M.O.F.E.X v1.14"
 Graphics 640,480,0,60
 'Global mywin = CreateWindow("M.O.F.E. v1.72b",GadgetWidth(Desktop())/4,GadgetHeight(Desktop())/4,640,500,Desktop(),WINDOW_TITLEBAR|WINDOW_RESIZABLE )
 'Global mypan = CreatePanel(0,0,640,480,mywin,PANEL_BORDER|PANEL_ACTIVE,"")
@@ -17,7 +18,10 @@ Include "bin\types.bmx"
 Include "bin\loadmenus.bmx"
 Include "bin\menu1.bmx"
 Include "bin\lightning.bmx"
-'AppTitle "M.O.F.E. v1.72b"
+Include "bin\loadfight.bmx"
+Include "bin\enginefunctions.bmx"
+
+
 'Graphics GadgetWidth(Desktop()),GadgetHeight(Desktop()),3
 'setting random seed
 SeedRnd (MilliSecs())
@@ -55,15 +59,25 @@ HideMouse
 'ShowMouse
 'Global frameTimer = CreateTimer(newfps)  
 
+
+
 getimpacts()
+getselectionfighters()
+getbgs()
+
+
+
 SetImageFont fntArialD
+SetBlend(LIGHTBLEND)
+SetBlend(ALPHABLEND)
 Global mainmmenu = createmainmenu()
 
 ' Your main screen draw loop 
 SetScale( 2,2) 
 
-
-While Not KeyHit(29)
+Global FPSTIMER:TTIMER = CreateTimer(30) 
+While Not KeyHit(KEY_F12)
+WaitTimer(FPSTIMER)
 '	Repeat
 '	elapsed=MilliSecs()-time
 '	Until elapsed
@@ -91,7 +105,19 @@ Cls
 'If maindebug = True Then Text 40,80, String(NFPS)
 'here is where the whole game is controlled
 'menufunctions(menuselect)
+If ENGINESTATUS$ <> "" Then
+fightingengine()
+Else
+If GNETSUCCESS <> 0 Then
+GNetSync HOSTX
+retrievemessages()
+playercount()
+EndIf
+keyevents()
+menuevents$()
+getkeycharmenu()
 drawmenus()
+EndIf
 'the net update script only runs if your online.. otherwise it wont run it
 If jnetgame = 1 Or jnetgame = 2 Then
 'Include "bin\updatenet.bmx"
@@ -110,8 +136,9 @@ EndIf
 'If selection > 3 Then selection = 0
 'DebugLog selection
 'EndIf
-guievents()
-menuevents$()
+'guievents()
+
+
 Flip
 'RedrawGadget( nbg)
 'Flip
