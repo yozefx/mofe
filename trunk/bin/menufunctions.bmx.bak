@@ -91,6 +91,14 @@ EndIf
 Next
 End Function
 
+Function deleteallmenus()
+For men2:menu = EachIn menu_list
+deletemenu(men2.mhandle)
+Next
+End Function
+
+
+
 Function deletemenu(mmhandle)
 For men:menu = EachIn menu_list
 If men.mhandle = mmhandle Then
@@ -227,6 +235,16 @@ Next
 
 End Function
 
+
+Function setmenufont(pphandle,fonttt)
+For men:menu = EachIn menu_list
+If men.mhandle = pphandle Then
+men.menufont = fonttt
+EndIf
+Next
+
+End Function
+
 Function addmenuitem(txt$,bimage$,tfunc$,tindex,pphandle)
 itm:menuitem = New menuitem
 itm.ihandle = Int(String(Rnd(1,999))+String(Rnd(1,999)))
@@ -250,6 +268,182 @@ Next
 Return itm.ihandle
 End Function
 
+
+
+Function createchatstring(ttext$)
+
+Local totalchats
+For chat:chatstring = EachIn chatstring_list
+chat.chatid = chat.chatid + 1
+If chat.chatid >= 15 Then chat.Remove()
+Next
+
+chat:chatstring = New chatstring
+chat.message$ = ttext$
+chat.chatid = 1
+
+
+
+End Function
+
+
+Function checkstartnetfight()
+Local startitfight = True
+objList = GNetObjects( HOSTX )
+For remoteObj = EachIn objList
+If GNetObjectRemote( remoteObj ) = True And GNetObjectState( remoteObj ) <> GNET_MESSAGE Then
+crapo = GetGNetInt( remoteObj,NETFIGHTLOADED)
+If crapo = 0 Then
+startitfight = False
+
+EndIf
+EndIf
+
+Next
+Return startitfight
+
+End Function
+
+
+
+
+Function checkplayersready()
+Local playerready = True
+objList = GNetObjects( HOSTX )
+For remoteObj = EachIn objList
+If GNetObjectRemote( remoteObj ) = True And GNetObjectState( remoteObj ) <> GNET_MESSAGE Then
+crapo = GetGNetInt( remoteObj,NETPREADY )
+If crapo = 0 Then
+playerready = False
+createchatstring(GetGNetString$( remoteObj,NETNAME )+" is not Ready.")
+createchatstring("")
+EndIf
+EndIf
+
+Next
+Return playerready
+
+End Function
+
+Function playercount()
+
+PLAYERCOUNTER=1
+objList = GNetObjects( HOSTX )
+For remoteObj = EachIn objList
+If GNetObjectRemote( remoteObj ) = True And GNetObjectState( remoteObj ) <> GNET_MESSAGE Then
+PLAYERCOUNTER=PLAYERCOUNTER + 1
+EndIf
+
+Next
+If PLAYERCOUNTER > 2 Then
+GAMEENGINETYPE$="Brawl"
+NETTEAM = Rnd(10,9999)
+Else
+GAMEENGINETYPE$="Arcade"
+NETTEAM = HOSTJOIN
+
+EndIf
+
+
+
+End Function
+
+Function retrievemessages()
+
+objList = GNetObjects( HOSTX,GNET_CREATED )
+For remoteObj = EachIn objList
+createchatstring(GetGNetString$( remoteObj,NETNAME )+" Joined Room.")
+createchatstring("")
+
+Next
+
+
+messList = GNetMessages( HOSTX )
+For remotemessage = EachIn messList
+DebugLog "found message from: "+GetGNetString$( remotemessage,1 )
+createchatstring(GetGNetString$( remotemessage,1 )+" wrote:")
+createchatstring(GetGNetString$( remotemessage,2 ))
+	If GetGNetString$( remotemessage,3 ) <> "n" Then
+	fartos$ = GetGNetString$( remotemessage,3 )
+		If Instr(fartos,"fightersel@",1) <> 0 Then
+		fartos$ = Replace(fartos$,"fightersel@","")
+		havit = False
+			For d:fighter = EachIn fighter_list
+				If Lower(fartos$) = Lower(d.fname$) Then
+				havit = True
+				
+				EndIf
+			Next
+			If havit = False Then
+			sendnetmessage(NEUSER$+"DOES NOT HAVE "+fartos$+"!!!","","nohave@")
+			createchatstring("YOU DO NOT HAVE "+fartos$+"!!!")
+			createchatstring("")
+			
+			P2FSELREADY = False
+			SetGNetInt( localObj,NETPREADY,False )
+			Else
+			P2FSELREADY = True
+			SetGNetInt( localObj,NETPREADY,True )
+			EndIf
+			
+			
+			
+		EndIf
+		If Instr(fartos,"stagesel@",1) <> 0 Then
+		fartos$ = Replace(fartos$,"stagesel@","")
+		havit = False
+			For b:bga = EachIn bga_list
+				If Lower(b.bgname$) = Lower(fartos$) Then
+				CURRENTSTAGE = b.bg
+				STAGENAME$ = b.bgname$
+				BGMUSIC = b.bgmusic
+				havit = True
+				EndIf
+			Next
+			If havit = False Then
+			sendnetmessage(NEUSER$+"DOES NOT HAVE STAGE "+fartos$+"!!!","")
+			P2FSELREADY = False
+			SetGNetInt( localObj,NETPREADY,False )
+			Else
+			P2FSELREADY = True
+			'sendnetmessage(NEUSER$+"HAS STAGE "+fartos$+"!!!","","yeshave@")
+			SetGNetInt( localObj,NETPREADY,True )
+			EndIf
+		
+		EndIf
+		
+		If Instr(fartos,"nohave@",1) <> 0 Then
+		havit = False
+		'P2FSELREADY = False
+		EndIf
+		
+		If Instr(fartos,"startfight@",1) <> 0 Then
+		'NETTEAM = Rnd(10,9999)
+		DebugLog "Startnetfight!"
+		deleteallmenus()
+		loadnetfight()
+		'P2FSELREADY = False
+		EndIf
+		
+	EndIf
+deletemenu(chatmesslist)
+chatmesslist = createchatlistmenu()
+Next
+
+End Function
+
+Function sendnetmessage(from$,ttext$,extraa$="n")
+SetGNetString( messageObj,1,from$ )
+SetGNetString( messageObj,2,ttext$ )
+SetGNetString( messageObj,3,extraa$ )
+
+objList = GNetObjects( HOSTX )
+	For remoteObj = EachIn objList
+	SendGNetMessage( messageObj,remoteObj)
+	Next
+SendGNetMessage( messageObj,localObj)
+	
+End Function
 
 Function keyevents()
 
@@ -702,6 +896,105 @@ End Select
 
 End Function
 
+Function getkeycharmenu()
+shit2 = GetChar()
+If shit2 >= 32 And shit2 <= 125 Then
+
+
+Select GETKEYCHAR$
+
+
+Case "chatsay"
+If getselectedmenuitem(chatmenu) = 0 And TextWidth(CHATSAYTEXT$) < 340 Then
+
+CHATSAYTEXT$ = CHATSAYTEXT$ + Chr(shit2)
+updatemenuitemtext(chatsayer,0,"> "+CHATSAYTEXT$)
+EndIf
+
+Case "multihuser"
+If getselectedmenuitem(mhostmenu) = 0 Then
+NETUSER$ = NETUSER$ + Chr(shit2)
+updatemenuitemtext(mhostmenu,0,"Username: "+NETUSER$)
+EndIf
+
+Case "multihpass"
+If getselectedmenuitem(mhostmenu) = 1 Then
+NETPASS$ = NETPASS$ + Chr(shit2)
+NETENCTPASS$ = ""
+For poopoo = 0 To Len(NETPASS$)
+If poopoo <> 0 Then
+NETENCTPASS$ = NETENCTPASS$ + "*"
+
+EndIf
+Next
+updatemenuitemtext(mhostmenu,1,"Password: "+NETENCTPASS$)
+EndIf
+
+Case "multihip"
+If getselectedmenuitem(mhostmenu) = 2 Then
+NETHOSTIP$ = NETHOSTIP$ + Chr(shit2)
+updatemenuitemtext(mhostmenu,2,"IP/HostN: "+NETHOSTIP$)
+EndIf
+
+End Select
+
+EndIf
+
+If KeyHit(KEY_BACKSPACE) Then
+
+Select GETKEYCHAR$
+
+Case "chatsay"
+If getselectedmenuitem(chatmenu) = 0 Then
+strnum = 0
+strnum = Len (CHATSAYTEXT$)
+strnum = strnum - 1
+CHATSAYTEXT$ = Mid (CHATSAYTEXT$, 1, strnum)
+
+updatemenuitemtext(chatsayer,0,"> "+CHATSAYTEXT$)
+EndIf
+
+Case "multihuser"
+If getselectedmenuitem(mhostmenu) = 0 Then
+strnum = 0
+strnum = Len (NETUSER$)
+strnum = strnum - 1
+NETUSER$ = Mid (NETUSER$, 1, strnum)
+updatemenuitemtext(mhostmenu,0,"Username: "+NETUSER$)
+EndIf
+
+Case "multihpass"
+If getselectedmenuitem(mhostmenu) = 1 Then
+strnum = 0
+strnum = Len (NETPASS$)
+strnum = strnum - 1
+NETPASS$ = Mid (NETPASS$, 1, strnum)
+NETENCTPASS$ = ""
+For poopoo = 0 To Len(NETPASS$)
+If poopoo <> 0 Then
+NETENCTPASS$ = NETENCTPASS$ + "*"
+
+EndIf
+Next
+updatemenuitemtext(mhostmenu,1,"Password: "+NETENCTPASS$)
+
+EndIf
+
+Case "multihip"
+If getselectedmenuitem(mhostmenu) = 2 Then
+strnum = 0
+strnum = Len (NETHOSTIP$)
+strnum = strnum - 1
+NETHOSTIP$ = Mid (NETHOSTIP$, 1, strnum)
+updatemenuitemtext(mhostmenu,2,"IP/HostN: "+NETHOSTIP$)
+EndIf
+
+End Select
+
+EndIf
+
+End Function
+
 
 Function menuevents$()
 
@@ -766,12 +1059,174 @@ escfunct$ = ""
 
 Select menufunct$
 
+Case "online"
+deletemenu(mainmmenu)
+multiplaymenu = createmultiplaymenu()
+
+Case "multireturn"
+deletemenu(multiplaymenu)
+mainmmenu = createmainmenu()
+
+Case "multihreturn"
+deletemenu(mhostmenu)
+multiplaymenu = createmultiplaymenu()
+
+Case "multihchat"
+deletemenu(hostmainmenu)
+chatmenu = createhostchatmenu()
+chatsayer = createchatsaymenu()
+chatmesslist = createchatlistmenu()
+
+Case "multicchat"
+deletemenu(hostmainmenu)
+chatmenu = createclientchatmenu()
+chatsayer = createchatsaymenu()
+chatmesslist = createchatlistmenu()
+
+Case "multicback"
+deletemenu(chatmenu)
+hostmainmenu = createclientmainmenu()
+
+Case "multihback"
+deletemenu(chatmenu)
+hostmainmenu = createhostmainmenu()
+
+
+Case "multihstartfight"
+If checkplayersready() = True Then
+sendnetmessage(NETUSER$,"FIGHT HAS STARTED!","startfight@")
+GNetSync HOSTX
+deleteallmenus()
+loadnetfight()
+Else
+deletemenu(hostmainmenu)
+chatmenu = createhostchatmenu()
+chatsayer = createchatsaymenu()
+chatmesslist = createchatlistmenu()
+
+EndIf
+
+Case "multihchatting"
+If CHATSAYTEXT$ = "" Then
+GETKEYCHAR$ = "chatsay"
+Else
+GETKEYCHAR$ = "chatsay"
+createchatstring(NETUSER$+"("+P1FNAME$+") wrote:")
+createchatstring(CHATSAYTEXT$)
+deletemenu(chatmesslist)
+chatmesslist = createchatlistmenu()
+sendnetmessage(NETUSER$+"("+P1FNAME$+")",CHATSAYTEXT$)
+CHATSAYTEXT$ = ""
+updatemenuitemtext(chatsayer,0,"> "+CHATSAYTEXT$)
+EndIf
+
+Case "multihost"
+deletemenu(multiplaymenu)
+mhostmenu = createhoststartmenu()
+
+Case "multijoin"
+deletemenu(multiplaymenu)
+mhostmenu = createclientstartmenu()
+
+Case "multihuser"
+GETKEYCHAR$ = "multihuser"
+
+Case "multihpass"
+GETKEYCHAR$ = "multihpass"
+
+Case "multihip"
+GETKEYCHAR$ = "multihip"
+
+
+Case "multihconnectc"
+	If HOSTX = Null Then Notify "No Host object."
+	
+	SetGNetString( localObj,NETNAME,NETUSER$ )
+	SetGNetInt( localObj,NETPREADY,0 )
+	
+GNETSUCCESS = GNetConnect( HOSTX,NETHOSTIP$,PORTX, 10000 )
+NETTEAM = 2
+HOSTJOIN = 2
+NETWID$ = NETUSER$+Rnd(1,9999)
+	SetGNetString( localObj,NETID,NETWID$ )
+
+DebugLog "connecting to "+NETHOSTIP$+" Port:"+PORTX
+If Not GNETSUCCESS Then 
+	deletemenu(mhostmenu)
+	multiplaymenu = createmultiplaymenu()
+	Notify "Could not join Game"
+Else
+
+	messageObj:TGNetObject = CreateGNetMessage:TGNetObject( HOSTX )
+deletemenu(mhostmenu)
+hostmainmenu = createclientmainmenu()
+EndIf
+
+Case "multihconnect"
+SetGNetString( localObj,NETNAME,NETUSER$ )
+	SetGNetInt( localObj,NETPREADY,0 )
+	GNETSUCCESS = GNetListen( HOSTX,PORTX )
+	NETTEAM = 1
+	HOSTJOIN = 1
+	NETWID$ = NETUSER$+Rnd(1,9999)
+	SetGNetString( localObj,NETID,NETWID$ )
+
+		If HOSTX = Null Then Notify "No Host object."
+	If Not GNETSUCCESS Then 
+	deletemenu(mhostmenu)
+	multiplaymenu = createmultiplaymenu()
+	Notify "Could not host Game"
+	Else
+	deletemenu(mhostmenu)
+	hostmainmenu = createhostmainmenu()
+	'localObj:TGNetObject = CreateGNetObject:TGNetObject( HOSTX )
+	messageObj:TGNetObject = CreateGNetMessage:TGNetObject( HOSTX )
+	EndIf
+	
+Case "multihfighter"
+deletemenu(hostmainmenu)
+hostfighterselmenu = createhostselectionscreen()
+setmenufx(hostfighterselmenu,"Lightning",20,0,20,480)
+setmenufx(hostfighterselmenu,"Lightning",610,0,610,480)
+
+setmenufx(hostfighterselmenu,"Lightning",120,0,120,480)
+setmenufx(hostfighterselmenu,"Lightning",510,0,510,480)
+
+Case "multicfighter"
+deletemenu(hostmainmenu)
+hostfighterselmenu = createclientselectionscreen()
+setmenufx(hostfighterselmenu,"Lightning",20,0,20,480)
+setmenufx(hostfighterselmenu,"Lightning",610,0,610,480)
+
+setmenufx(hostfighterselmenu,"Lightning",120,0,120,480)
+setmenufx(hostfighterselmenu,"Lightning",510,0,510,480)
+
+
+Case "multihexit"
+deletemenu(hostmainmenu)
+multiplaymenu = createmultiplaymenu()
+
+Case "stageselhost"
+
+poop = getselectedmenuitem(stageselmenuhost)
+For b:bga = EachIn bga_list
+If b.bgnum = poop Then
+CURRENTSTAGE = b.bg
+STAGENAME$ = b.bgname$
+BGMUSIC = b.bgmusic
+sendnetmessage(NETUSER$+" Selected stage:",STAGENAME$,"stagesel@"+STAGENAME$)
+EndIf
+Next
+deletemenu(stageselmenuhost)
+deletemenu(stageseltext)
+hostmainmenu = createhostmainmenu()
 
 Case "stagesel"
 poop = getselectedmenuitem(stageselmenu)
 For b:bga = EachIn bga_list
 If b.bgnum = poop Then
 CURRENTSTAGE = b.bg
+BGMUSIC = b.bgmusic
 EndIf
 Next
 deletemenu(stageselmenu)
@@ -797,10 +1252,34 @@ p.char.fighternum = 2
 p.char.fname$ = P2FNAME$
 p.char.fid$ = p.fid$
 loadfight()
-ENGINESTATUS$ = "RESET"
+ENGINESTATUS$ = "INIT"
+
+Case "hosttypesel"
+P1ETYPE = getselectedmenuitem(p1hosttypesel)
+P1FSELREADY = True
+'If P1FSELREADY = True And P2FSELREADY = True Then
+deletemenu(hostfighterselmenu)
+deletemenu(p1hosttypesel)
+hostmainmenu = createhostmainmenu()
+SetGNetInt( localObj,NETPREADY,1 )
+
+Case "clienttypesel"
+P1ETYPE = getselectedmenuitem(p1hosttypesel)
+P1FSELREADY = True
+'If P1FSELREADY = True And P2FSELREADY = True Then
+deletemenu(hostfighterselmenu)
+deletemenu(p1hosttypesel)
+hostmainmenu = createclientmainmenu()
+SetGNetInt( localObj,NETPREADY,1 )
+
+Case "multihstage"
+deletemenu(hostmainmenu)
+stageselmenuhost = createstageselectionscreenhost()
+stageseltext = createstageseltext()
+setmenufx(stageselmenuhost,"Lightning",0,20,640,20)
 
 Case "typesel"
-P1ETYPE = getselectedmenuitemp1(p1typesel)
+P1ETYPE = getselectedmenuitem(p1typesel)
 P1FSELREADY = True
 If P1FSELREADY = True And P2FSELREADY = True Then
 deletemenu(fighterselmenu)
@@ -1348,6 +1827,31 @@ optionsmenu = createoptionsmenu()
 Case "exitgame"
 End
 
+Case "hostfightersel"
+poop = getselectedmenuitem(hostfighterselmenu)
+For d:fighter = EachIn fighter_list
+If d.fighternum = poop+1 Then
+P1FNAME$ = d.fname$
+SetGNetString( localObj,NETFNAME,d.fname$ )
+sendnetmessage(NETUSER$+" Selected Fighter:",P1FNAME$,"fighter@"+P1FNAME$)
+EndIf
+Next
+p1hosttypesel = createplayer1typehost()
+setmenudeactive(hostfighterselmenu)
+
+
+Case "clientfightersel"
+poop = getselectedmenuitem(hostfighterselmenu)
+For d:fighter = EachIn fighter_list
+If d.fighternum = poop+1 Then
+P1FNAME$ = d.fname$
+SetGNetString( localObj,NETFNAME,d.fname$ )
+sendnetmessage(NETUSER$+" Selected Fighter:",P1FNAME$,"fighter@"+P1FNAME$)
+EndIf
+Next
+p1hosttypesel = createplayer1typeclient()
+setmenudeactive(hostfighterselmenu)
+
 Case "fightersel"
 poop = getselectedmenuitem(fighterselmenu)
 For d:fighter = EachIn fighter_list
@@ -1403,6 +1907,120 @@ setmenuactive(poop)
 Return poop
 End Function
 
+Function createmultiplaymenu()
+poop = createxmenu(0,0,300,240,"menu\optscreen.png","menu\bar.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
+addmenuitem("Host Game","","multihost",0,poop)
+addmenuitem("Join Game","","multijoin",1,poop)
+addmenuitem("Return","","multireturn",2,poop)
+
+setmenuactive(poop)
+Return poop
+End Function
+
+Function createhoststartmenu()
+poop = createxmenu(0,0,300,240,"menu\optscreen.png","menu\bar.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
+addmenuitem("Username: "+NETUSER$,"","multihuser",0,poop)
+addmenuitem("Password: "+NETENCTPASS$,"","multihpass",1,poop)
+addmenuitem("Connect","","multihconnect",2,poop)
+addmenuitem("Return","","multihreturn",3,poop)
+
+setmenuactive(poop)
+Return poop
+
+
+End Function
+
+
+Function createhostchatmenu()
+poop = createxmenu(0,0,300,240,"menu\chatmenu.png","menu\bar2.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
+addmenuitem("Chat","","multihchatting",0,poop)
+addmenuitem("Back","","multihback",1,poop)
+
+
+setmenuactive(poop)
+Return poop
+
+End Function
+
+Function createclientchatmenu()
+poop = createxmenu(0,0,300,240,"menu\chatmenu.png","menu\bar2.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
+addmenuitem("Chat","","multihchatting",0,poop)
+addmenuitem("Back","","multicback",1,poop)
+
+
+setmenuactive(poop)
+Return poop
+
+End Function
+
+
+Function createchatlistmenu()
+poop = createxmenu(196,16,640,480,"menu\blank.png","menu\self3.png","wav\menu.wav","","wav\select.wav")
+fart = 0
+For chat:chatstring = EachIn chatstring_list
+addmenuitem(chat.message$,"","",fart,poop)
+fart = fart + 1
+Next
+setmenufont(poop,fntArialA)
+
+'setmenuactive(poop)
+Return poop
+End Function
+
+Function createchatsaymenu()
+poop = createxmenu(196,436,300,240,"menu\blank.png","menu\self3.png","wav\menu.wav","","wav\select.wav")
+addmenuitem("> "+CHATSAYTEXT$,"","chatsay",0,poop)
+setmenufont(poop,fntArialA)
+
+'setmenuactive(poop)
+Return poop
+End Function
+
+Function createhostmainmenu()
+poop = createxmenu(0,0,300,240,"menu\optscreen.png","menu\bar.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
+addmenuitem("Fighter","","multihfighter",0,poop)
+addmenuitem("Stage ","","multihstage",1,poop)
+'addmenuitem("Settings","","multihsettings",2,poop)
+addmenuitem("Start Fight","","multihstartfight",2,poop)
+
+addmenuitem("Chat","","multihchat",3,poop)
+
+addmenuitem("Exit","","multihexit",4,poop)
+
+setmenuactive(poop)
+Return poop
+
+
+End Function
+
+
+Function createclientmainmenu()
+poop = createxmenu(0,0,300,240,"menu\optscreen.png","menu\bar.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
+addmenuitem("Fighter","","multicfighter",0,poop)
+
+addmenuitem("Chat","","multicchat",1,poop)
+
+addmenuitem("Exit","","multicexit",2,poop)
+
+setmenuactive(poop)
+Return poop
+
+
+End Function
+
+Function createclientstartmenu()
+poop = createxmenu(0,0,300,240,"menu\optscreen.png","menu\bar.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
+addmenuitem("Username: "+NETUSER$,"","multihuser",0,poop)
+addmenuitem("Password: "+NETENCTPASS$,"","multihpass",1,poop)
+addmenuitem("IP/HostN: "+NETHOSTIP$,"","multihip",2,poop)
+addmenuitem("Connect","","multihconnectc",3,poop)
+addmenuitem("Return","","multihreturn",4,poop)
+
+setmenuactive(poop)
+Return poop
+
+
+End Function
 
 Function createcontrolsmenu()
 poop = createxmenu(0,0,300,240,"menu\optscreen.png","menu\bar.png","wav\menu.wav","music\ryu.ogg","wav\select.wav")
@@ -1591,6 +2209,29 @@ Return poop
 
 End Function
 
+Function createstageselectionscreenhost()
+poop = createxmenu(0,64,300,240,"menu\stagesel.png","menu\self.png","wav\menu.wav","music\world.ogg","wav\select.wav")
+'addmenuitem("eh?","","fightersel",0,poop)
+
+poopit = 0
+
+For b:bga = EachIn bga_list
+addmenuitem("","bgs\"+b.thumbgpath$,"stageselhost",poopit,poop)
+'setitembg(poop,poopit,"bgs\"+b.bgname$+".png")
+'setitembgscale(poop,poopit,True,1)
+poopit = poopit + 1
+Next
+setmenucols(poop,10)
+'addmenuitem("",turds$,"fightersel",poopit,poop)
+'addmenuitem("",turds$,"fightersel",poopit+1,poop)
+'addmenuitem("",turds$,"fightersel",poopit+2,poop)
+
+setmenuactive(poop)
+
+Return poop
+
+End Function
+
 Function createselectionscreen()
 poop = createxmenu(180,60,300,240,"menu\selscreen.png","menu\self.png","wav\menu.wav","music\world.ogg","wav\select.wav")
 'addmenuitem("eh?","","fightersel",0,poop)
@@ -1613,6 +2254,48 @@ Return poop
 End Function
 
 
+Function createhostselectionscreen()
+poop = createxmenu(180,60,300,240,"menu\selscreen.png","menu\self.png","wav\menu.wav","music\world.ogg","wav\select.wav")
+'addmenuitem("eh?","","fightersel",0,poop)
+setmenucols(poop,4)
+poopit = 0
+
+
+For d:fighter = EachIn fighter_list
+addmenuitem("",d.selspath$,"hostfightersel",poopit,poop)
+setitembg(poop,poopit,d.selbpath$)
+turds$ = d.selspath$
+poopit = poopit + 1
+Next
+
+setmenuactive(poop)
+P2TYPE$ = ""
+P2FSELREADY = True
+P1FSELREADY = False
+Return poop
+End Function
+
+Function createclientselectionscreen()
+poop = createxmenu(180,60,300,240,"menu\selscreen.png","menu\self.png","wav\menu.wav","music\world.ogg","wav\select.wav")
+'addmenuitem("eh?","","fightersel",0,poop)
+setmenucols(poop,4)
+poopit = 0
+
+
+For d:fighter = EachIn fighter_list
+addmenuitem("",d.selspath$,"clientfightersel",poopit,poop)
+setitembg(poop,poopit,d.selbpath$)
+turds$ = d.selspath$
+poopit = poopit + 1
+Next
+
+setmenuactive(poop)
+P2TYPE$ = ""
+P2FSELREADY = True
+P1FSELREADY = False
+Return poop
+End Function
+
 Function createplayer1type()
 poop = createxmenu(0,20,180,240,"menu\blank.png","menu\tsel.png","wav\menu.wav","","wav\select.wav")
 setmenucols(poop,1)
@@ -1628,6 +2311,36 @@ setmenuactive(poop)
 Return poop
 End Function
 
+
+Function createplayer1typehost()
+poop = createxmenu(0,20,180,240,"menu\blank.png","menu\tsel.png","wav\menu.wav","","wav\select.wav")
+setmenucols(poop,1)
+addmenuitem("","menu\typem.png","hosttypesel",0,poop)
+addmenuitem("","menu\typeo.png","hosttypesel",1,poop)
+addmenuitem("","menu\typef.png","hosttypesel",2,poop)
+addmenuitem("","menu\typee.png","hosttypesel",3,poop)
+addmenuitem("","menu\typex.png","hosttypesel",4,poop)
+
+
+setmenuactive(poop)
+
+Return poop
+End Function
+
+Function createplayer1typeclient()
+poop = createxmenu(0,20,180,240,"menu\blank.png","menu\tsel.png","wav\menu.wav","","wav\select.wav")
+setmenucols(poop,1)
+addmenuitem("","menu\typem.png","clienttypesel",0,poop)
+addmenuitem("","menu\typeo.png","clienttypesel",1,poop)
+addmenuitem("","menu\typef.png","clienttypesel",2,poop)
+addmenuitem("","menu\typee.png","clienttypesel",3,poop)
+addmenuitem("","menu\typex.png","clienttypesel",4,poop)
+
+
+setmenuactive(poop)
+
+Return poop
+End Function
 
 Function createplayer2type()
 poop = createxmenu(640-180,20,180,240,"menu\blank.png","menu\tsel.png","wav\menu.wav","","wav\select.wav")
@@ -1672,75 +2385,149 @@ Next
 End Function
 
 Function getselectionfighters()
-tempdir=ReadDir(CurrentDir$()+"\Fighters\")
-DebugLog tempdir
-fightnum = 0
-Repeat
-tempfile$=NextFile$(tempdir)
-DebugLog tempfile$+" <----- file?"
-If FileType(CurrentDir$()+"\Fighters\"+tempfile$) = 2 And tempfile$ <> "." And tempfile$ <> ".." Then
-d:fighter = New fighter
-DebugLog "made a fighter"
-fightnum = fightnum + 1
-d.fighternum = fightnum
-tempshitass = tempshitass + 1
-d.fname$ = tempfile$
-d.fid$ = tempfile$
-d.fanim$ = "intro"
-tempdir2=ReadDir(CurrentDir$()+"\Fighters\"+tempfile$)
-tempfile2$ = "p"
-While tempfile2$ <> ""
-tempfile2$=NextFile$(tempdir2)
-tempfile2$ = Lower(tempfile2$)
-If Instr(tempfile2$,".mfe",1) <> 0 Or Instr(tempfile2$,".MFE",1) <> 0 Then
-d.dfile$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
-If d.dfile$ <> "" Then
-d.Stream = OpenFile(d.dfile$)
-'print "datafile "+p\datafile$
-'turd = ReadInt(d.Stream)
-d.charid$ = ReadString(d.Stream,5)
-d.vit = ReadInt(d.Stream)
-d.spd = ReadInt(d.Stream)
-d.def = ReadInt(d.Stream)
-d.pow = ReadInt(d.Stream)
-d.spr = ReadInt(d.Stream)
-d.will = ReadInt(d.Stream)
-CloseFile( d.Stream ) 
-EndIf
-
-EndIf
-If Instr(tempfile2$,".png",1) <> 0 Or Instr(tempfile2$,".PNG",1) <> 0 Then
-If Instr(tempfile2$,"selb",1) <> 0 Then
-d.selbpath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
-d.selb = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
-'MaskImage d.selb,255,0,255
-EndIf
-If Instr(tempfile2$,"sels",1) <> 0 Then
-d.selspath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
-
-d.sels = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
-'MaskImage d.sels,255,0,255
-EndIf
-
-EndIf
-Cls
-SetScale( 2,2 )
-SetImageFont(fntArialA)
-DrawImage mainload,0,0
-'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
-DrawText "Loading: Fighter "+tempfile$,0,0
-'a debug code
-'If maindebug = True Then 
-'Print startdir$+"\sprites\"+tempfile$
-Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
-SetScale( 1,1 )
-
-
-Wend
-EndIf
-
-If tempfile$="" Then Exit 
-Forever
+	'optimized for faster loading.
+	tempdir=ReadDir(CurrentDir$()+"\Fighters\")
+	DebugLog tempdir
+	fightnum = 0
+	Repeat
+		tempfile$=NextFile$(tempdir)
+		DebugLog tempfile$+" <----- file?"
+		If FileType(CurrentDir$()+"\Fighters\"+tempfile$) = 2 And tempfile$ <> "." And tempfile$ <> ".." And tempfile$ <> ".svn" Then
+			'let's wait to make the fighter until we know the data is even there..
+			
+			'd:fighter = New fighter
+			'DebugLog "made a fighter"
+			'fightnum = fightnum + 1
+			'd.fighternum = fightnum
+			'not sure why io used that variable name lol
+			'tempshitass = tempshitass + 1
+			'tempint = tempint + 1
+			'd.fname$ = tempfile$
+			'd.fid$ = tempfile$
+			'd.fanim$ = "intro"
+			'tempdir2=ReadDir(CurrentDir$()+"\Fighters\"+tempfile$)
+			'tempfile2$ = "p"
+			
+			'**************************************************************************************************************
+			'going to speed this up, no point in iterating through each file if we know exactly what we need out of the dir
+			'**************************************************************************************************************
+			
+			If FileType(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile$+".mfe") = 1 Then
+			
+				d:fighter = New fighter
+				fightnum = fightnum + 1
+				d.fighternum = fightnum
+				d.fname$ = tempfile$
+				'might want to check on that id
+				d.fid$ = tempfile$
+				d.fanim$ = "intro"	
+				d.dfile$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile$+".mfe"			
+				d.Stream = ReadFile(d.dfile$)
+				d.charid$ = ReadString(d.Stream,5)
+				d.vit = ReadInt(d.Stream)
+				d.spd = ReadInt(d.Stream)
+				d.def = ReadInt(d.Stream)
+				d.pow = ReadInt(d.Stream)
+				d.spr = ReadInt(d.Stream)
+				d.will = ReadInt(d.Stream)
+				CloseFile( d.Stream ) 			
+			
+			
+				'get selection images
+				If FileType(CurrentDir$()+"\Fighters\"+tempfile$+"\selb.png") = 1 Then
+				
+					d.selbpath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\selb.png"
+					d.selb = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\selb.png")
+				
+				Else
+				
+					d.selbpath$ = CurrentDir$()+"\sprites\selb.png"
+					d.selb = LoadImage(CurrentDir$()+"\sprites\selb.png")					
+				
+				EndIf
+				If FileType(CurrentDir$()+"\Fighters\"+tempfile$+"\sels.png") = 1 Then
+				
+					d.selspath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\sels.png"
+					d.sels = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\sels.png")
+				
+				Else
+				
+					d.selspath$ = CurrentDir$()+"\sprites\sels.png"
+					d.sels = LoadImage(CurrentDir$()+"\sprites\sels.png")					
+				
+				EndIf
+				Cls
+				SetScale( 2,2 )
+				SetImageFont(fntArialA)
+				DrawImage mainload,0,0
+				'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
+				DrawText "Loading: Fighter "+tempfile$,0,0
+				'a debug code
+				'If maindebug = True Then 
+				'Print startdir$+"\sprites\"+tempfile$
+				Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
+				SetScale( 1,1 )				
+							
+			EndIf
+			Rem
+			While tempfile2$ <> ""
+				tempfile2$=NextFile$(tempdir2)
+				tempfile2$ = Lower(tempfile2$)
+				If Instr(tempfile2$,".mfe",1) <> 0 Or Instr(tempfile2$,".MFE",1) <> 0 Then
+					d.dfile$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
+					If d.dfile$ <> "" Then
+					d.Stream = OpenFile(d.dfile$)
+					'print "datafile "+p\datafile$
+					'turd = ReadInt(d.Stream)
+					d.charid$ = ReadString(d.Stream,5)
+					d.vit = ReadInt(d.Stream)
+					d.spd = ReadInt(d.Stream)
+					d.def = ReadInt(d.Stream)
+					d.pow = ReadInt(d.Stream)
+					d.spr = ReadInt(d.Stream)
+					d.will = ReadInt(d.Stream)
+					CloseFile( d.Stream ) 
+					EndIf
+					
+					EndIf
+					If Instr(tempfile2$,".png",1) <> 0 Or Instr(tempfile2$,".PNG",1) <> 0 Then
+					If Instr(tempfile2$,"selb",1) <> 0 Then
+					d.selbpath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
+					d.selb = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
+					'MaskImage d.selb,255,0,255
+					EndIf
+					If Instr(tempfile2$,"sels",1) <> 0 Then
+					d.selspath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
+					
+					d.sels = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
+					'MaskImage d.sels,255,0,255
+					EndIf
+				
+				EndIf
+				
+				
+				
+				
+				Cls
+				SetScale( 2,2 )
+				SetImageFont(fntArialA)
+				DrawImage mainload,0,0
+				'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
+				DrawText "Loading: Fighter "+tempfile$,0,0
+				'a debug code
+				'If maindebug = True Then 
+				'Print startdir$+"\sprites\"+tempfile$
+				Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
+				SetScale( 1,1 )
+				
+			
+			Wend
+			End Rem
+			
+		EndIf
+		
+		If tempfile$="" Then Exit 
+	Forever
 End Function 
 
 
@@ -1764,7 +2551,7 @@ tempdir=ReadDir(startdir$+"\sprites\")
 tempfile$ = "poop"
 Repeat
 tempfile$=NextFile$(tempdir)
-Print "tempfile: "+tempfile$+ startdir$+"\sprites\" 
+Print "tempfile: "+tempfile$+startdir$+"\sprites\" 
 'If tempdir finds a png file it will load it.. otherwise its skipped
 If Instr(Lower(tempfile$),".png",1) <> 0 Then
 'im only gonna allow 20 frames in an animation.. mainly because the loading time will take For ever To load
@@ -1827,36 +2614,50 @@ End Function
 
 Function getbgs()
 
-bgdir=ReadDir(startdir$+"\bgs\")
-bgnum = 0
-Repeat
-bgfile$=NextFile$(bgdir)
-bgfile$ = Lower(bgfile$)
-	If Instr(bgfile$,".png",1) <> 0 And Instr(bgfile$,"_thumb",1) = 0 Then
-	b:bga = New bga
-	
-	b.bgnum = bgnum
-	bgnum = bgnum + 1
-	b.bg = LoadImage(startdir$+"\bgs\"+bgfile$,0)
-	'lets take out the .png To use the file as the name of the background
-	DebugLog "Made file from "+bgfile$
-	b.bgname$ = Replace(bgfile$,".png","")
-	b.thumbgpath$ = b.bgname$+"_thumb.png"
-	EndIf
-Cls
-SetScale( 2,2 )
-SetImageFont(fntArialA)
-DrawImage mainload,0,0
-'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
-DrawText "Loading: Stages "+bgfile$,0,0
-'a debug code
-'If maindebug = True Then 
-'Print startdir$+"\sprites\"+tempfile$
-Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
-SetScale( 1,1 )
-'If we run out of files in the bg folder Then we are done here
-If bgfile$="" Then Exit 
-Forever
+	bgdir=ReadDir(startdir$+"\bgs\")
+	bgnum = 0
+	Repeat
+		bgfile$=NextFile$(bgdir)
+		bgfile$ = Lower(bgfile$)
+		If Instr(bgfile$,".png",1) <> 0 And Instr(bgfile$,"_thumb",1) = 0 Then
+			b:bga = New bga
+			
+			b.bgnum = bgnum
+			bgnum = bgnum + 1
+			'do i really need to load the music and stage large files now?
+			b.sbgpath$ = startdir$+"\bgs\"+bgfile$
+			'b.bg = LoadImage(startdir$+"\bgs\"+bgfile$,0)
+			
+			
+			If FileType(startdir$+"\music\"+Replace(bgfile$,".png",".ogg")) <> 0 Then 
+				b.bgmusicpath$ = startdir$+"\music\"+Replace(bgfile$,".png",".ogg")
+			'b.bgmusic = LoadSound(startdir$+"\music\"+Replace(bgfile$,".png",".ogg"),True)
+			Else
+				b.bgmusicpath$ = startdir$+"\music\ryu.ogg"
+			'b.bgmusic = LoadSound(startdir$+"\music\ryu.ogg",True)
+			EndIf
+			'lets take out the .png To use the file as the name of the background
+			DebugLog "Made file from "+bgfile$
+			b.bgname$ = Replace(bgfile$,".png","")
+			b.thumbgpath$ = b.bgname$+"_thumb.png"
+			Cls
+			SetScale( 2,2 )
+			SetImageFont(fntArialA)
+			DrawImage mainload,0,0
+			'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
+			DrawText "Loading: Stages "+bgfile$,0,0
+			'a debug code
+			'If maindebug = True Then 
+			'Print startdir$+"\sprites\"+tempfile$
+			Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
+			SetScale( 1,1 )		
+		EndIf
+		
+		
+
+		'If we run out of files in the bg folder Then we are done here
+		If bgfile$="" Then Exit 
+	Forever
 
 
 End Function

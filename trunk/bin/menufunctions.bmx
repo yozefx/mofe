@@ -998,888 +998,887 @@ End Function
 
 Function menuevents$()
 
-Select p2_menufunct$
+	Select p2_menufunct$
+	
+		Case "typesel"
+			P2ETYPE = getselectedmenuitemp2(p2typesel)
+			P2FSELREADY = True
+			If P1FSELREADY = True And P2FSELREADY = True Then
+			deletemenu(fighterselmenu)
+			deletemenu(p1typesel)
+			deletemenu(p2typesel)
+			stageselmenu = createstageselectionscreen()
+			stageseltext = createstageseltext()
+			setmenufx(stageselmenu,"Lightning",0,20,640,20)
+			EndIf
+		
+		Case "fightersel"
+			selfight = getselectedmenuitemp2(fighterselmenu)
+			For d:fighter = EachIn fighter_list
+			If d.fighternum = selfight+1 Then
+			P2FNAME$ = d.fname$
+			EndIf
+			Next
+			
+			p2typesel = createplayer2type()
+			allowp2menu(p2typesel)
+			setmenup2active(p2typesel)
+			denyp1menu(p2typesel)
+			setmenup2unfocus(fighterselmenu)
+	
+	End Select
+	p2_menufunct$ = ""
 
-Case "typesel"
 
-P2ETYPE = getselectedmenuitemp2(p2typesel)
-P2FSELREADY = True
-If P1FSELREADY = True And P2FSELREADY = True Then
-deletemenu(fighterselmenu)
-deletemenu(p1typesel)
-deletemenu(p2typesel)
-stageselmenu = createstageselectionscreen()
-stageseltext = createstageseltext()
-setmenufx(stageselmenu,"Lightning",0,20,640,20)
-EndIf
-
-Case "fightersel"
-poop = getselectedmenuitemp2(fighterselmenu)
-For d:fighter = EachIn fighter_list
-If d.fighternum = poop+1 Then
-P2FNAME$ = d.fname$
-EndIf
-Next
-
-p2typesel = createplayer2type()
-allowp2menu(p2typesel)
-setmenup2active(p2typesel)
-denyp1menu(p2typesel)
-setmenup2unfocus(fighterselmenu)
-
-End Select
-p2_menufunct$ = ""
-
-
-Select escfunct$
-
-Case "stagesel"
-deletemenu(stageselmenu)
-deletemenu(stageseltext)
-fighterselmenu = createselectionscreen()
-allowp2menu(fighterselmenu)
-setmenufx(fighterselmenu,"Lightning",20,0,20,480)
-setmenufx(fighterselmenu,"Lightning",610,0,610,480)
-
-setmenufx(fighterselmenu,"Lightning",120,0,120,480)
-setmenufx(fighterselmenu,"Lightning",510,0,510,480)
-
-Case "fightersel"
-
-deletemenu(fighterselmenu)
-mainmmenu = createmainmenu()
-
-Case "typesel"
-deletemenu(p1typesel)
-setmenuactive(fighterselmenu)
-
-End Select
-escfunct$ = ""
+	Select escfunct$
+	
+		Case "stagesel"
+			deletemenu(stageselmenu)
+			deletemenu(stageseltext)
+			fighterselmenu = createselectionscreen()
+			allowp2menu(fighterselmenu)
+			setmenufx(fighterselmenu,"Lightning",20,0,20,480)
+			setmenufx(fighterselmenu,"Lightning",610,0,610,480)
+			
+			setmenufx(fighterselmenu,"Lightning",120,0,120,480)
+			setmenufx(fighterselmenu,"Lightning",510,0,510,480)
+		
+		Case "fightersel"
+		
+			deletemenu(fighterselmenu)
+			mainmmenu = createmainmenu()
+		
+		Case "typesel"
+			deletemenu(p1typesel)
+			setmenuactive(fighterselmenu)
+	
+	End Select
+	escfunct$ = ""
 'Return escfunct$
 
-Select menufunct$
-
-Case "online"
-deletemenu(mainmmenu)
-multiplaymenu = createmultiplaymenu()
-
-Case "multireturn"
-deletemenu(multiplaymenu)
-mainmmenu = createmainmenu()
-
-Case "multihreturn"
-deletemenu(mhostmenu)
-multiplaymenu = createmultiplaymenu()
-
-Case "multihchat"
-deletemenu(hostmainmenu)
-chatmenu = createhostchatmenu()
-chatsayer = createchatsaymenu()
-chatmesslist = createchatlistmenu()
-
-Case "multicchat"
-deletemenu(hostmainmenu)
-chatmenu = createclientchatmenu()
-chatsayer = createchatsaymenu()
-chatmesslist = createchatlistmenu()
-
-Case "multicback"
-deletemenu(chatmenu)
-hostmainmenu = createclientmainmenu()
-
-Case "multihback"
-deletemenu(chatmenu)
-hostmainmenu = createhostmainmenu()
-
-
-Case "multihstartfight"
-If checkplayersready() = True Then
-sendnetmessage(NETUSER$,"FIGHT HAS STARTED!","startfight@")
-GNetSync HOSTX
-deleteallmenus()
-loadnetfight()
-Else
-deletemenu(hostmainmenu)
-chatmenu = createhostchatmenu()
-chatsayer = createchatsaymenu()
-chatmesslist = createchatlistmenu()
-
-EndIf
-
-Case "multihchatting"
-If CHATSAYTEXT$ = "" Then
-GETKEYCHAR$ = "chatsay"
-Else
-GETKEYCHAR$ = "chatsay"
-createchatstring(NETUSER$+"("+P1FNAME$+") wrote:")
-createchatstring(CHATSAYTEXT$)
-deletemenu(chatmesslist)
-chatmesslist = createchatlistmenu()
-sendnetmessage(NETUSER$+"("+P1FNAME$+")",CHATSAYTEXT$)
-CHATSAYTEXT$ = ""
-updatemenuitemtext(chatsayer,0,"> "+CHATSAYTEXT$)
-EndIf
-
-Case "multihost"
-deletemenu(multiplaymenu)
-mhostmenu = createhoststartmenu()
-
-Case "multijoin"
-deletemenu(multiplaymenu)
-mhostmenu = createclientstartmenu()
-
-Case "multihuser"
-GETKEYCHAR$ = "multihuser"
-
-Case "multihpass"
-GETKEYCHAR$ = "multihpass"
-
-Case "multihip"
-GETKEYCHAR$ = "multihip"
-
-
-Case "multihconnectc"
-	If HOSTX = Null Then Notify "No Host object."
+	Select menufunct$
 	
-	SetGNetString( localObj,NETNAME,NETUSER$ )
-	SetGNetInt( localObj,NETPREADY,0 )
+		Case "online"
+			deletemenu(mainmmenu)
+			multiplaymenu = createmultiplaymenu()
+		
+		Case "multireturn"
+			deletemenu(multiplaymenu)
+			mainmmenu = createmainmenu()
+		
+		Case "multihreturn"
+			deletemenu(mhostmenu)
+			multiplaymenu = createmultiplaymenu()
+		
+		Case "multihchat"
+			deletemenu(hostmainmenu)
+			chatmenu = createhostchatmenu()
+			chatsayer = createchatsaymenu()
+			chatmesslist = createchatlistmenu()
+		
+		Case "multicchat"
+			deletemenu(hostmainmenu)
+			chatmenu = createclientchatmenu()
+			chatsayer = createchatsaymenu()
+			chatmesslist = createchatlistmenu()
+		
+		Case "multicback"
+			deletemenu(chatmenu)
+			hostmainmenu = createclientmainmenu()
+		
+		Case "multihback"
+			deletemenu(chatmenu)
+			hostmainmenu = createhostmainmenu()
+		
+		
+		Case "multihstartfight"
+			If checkplayersready() = True Then
+				sendnetmessage(NETUSER$,"FIGHT HAS STARTED!","startfight@")
+				GNetSync HOSTX
+				deleteallmenus()
+				loadnetfight()
+			Else
+				deletemenu(hostmainmenu)
+				chatmenu = createhostchatmenu()
+				chatsayer = createchatsaymenu()
+				chatmesslist = createchatlistmenu()
+			
+			EndIf
+		
+		Case "multihchatting"
+			If CHATSAYTEXT$ = "" Then
+				GETKEYCHAR$ = "chatsay"
+			Else
+				GETKEYCHAR$ = "chatsay"
+				createchatstring(NETUSER$+"("+P1FNAME$+") wrote:")
+				createchatstring(CHATSAYTEXT$)
+				deletemenu(chatmesslist)
+				chatmesslist = createchatlistmenu()
+				sendnetmessage(NETUSER$+"("+P1FNAME$+")",CHATSAYTEXT$)
+				CHATSAYTEXT$ = ""
+				updatemenuitemtext(chatsayer,0,"> "+CHATSAYTEXT$)
+			EndIf
+		
+		Case "multihost"
+			deletemenu(multiplaymenu)
+			mhostmenu = createhoststartmenu()
+		
+		Case "multijoin"
+			deletemenu(multiplaymenu)
+			mhostmenu = createclientstartmenu()
+		
+		Case "multihuser"
+			GETKEYCHAR$ = "multihuser"
+		
+		Case "multihpass"
+			GETKEYCHAR$ = "multihpass"
+		
+		Case "multihip"
+			GETKEYCHAR$ = "multihip"
+		
+		
+		Case "multihconnectc"
+			If HOSTX = Null Then Notify "No Host object."
+			
+			SetGNetString( localObj,NETNAME,NETUSER$ )
+			SetGNetInt( localObj,NETPREADY,0 )
+				
+			GNETSUCCESS = GNetConnect( HOSTX,NETHOSTIP$,PORTX, 10000 )
+			NETTEAM = 2
+			HOSTJOIN = 2
+			NETWID$ = NETUSER$+Rnd(1,9999)
+			SetGNetString( localObj,NETID,NETWID$ )
+			
+			DebugLog "connecting to "+NETHOSTIP$+" Port:"+PORTX
+			If Not GNETSUCCESS Then 
+				deletemenu(mhostmenu)
+				multiplaymenu = createmultiplaymenu()
+				Notify "Could not join Game"
+			Else
+			
+				messageObj:TGNetObject = CreateGNetMessage:TGNetObject( HOSTX )
+				deletemenu(mhostmenu)
+				hostmainmenu = createclientmainmenu()
+			EndIf
+		
+		Case "multihconnect"
+			SetGNetString( localObj,NETNAME,NETUSER$ )
+			SetGNetInt( localObj,NETPREADY,0 )
+			GNETSUCCESS = GNetListen( HOSTX,PORTX )
+			NETTEAM = 1
+			HOSTJOIN = 1
+			NETWID$ = NETUSER$+Rnd(1,9999)
+			SetGNetString( localObj,NETID,NETWID$ )
+		
+			If HOSTX = Null Then Notify "No Host object."
+			If Not GNETSUCCESS Then 
+				deletemenu(mhostmenu)
+				multiplaymenu = createmultiplaymenu()
+				Notify "Could not host Game"
+			Else
+				deletemenu(mhostmenu)
+				hostmainmenu = createhostmainmenu()
+				'localObj:TGNetObject = CreateGNetObject:TGNetObject( HOSTX )
+				messageObj:TGNetObject = CreateGNetMessage:TGNetObject( HOSTX )
+			EndIf
+			
+		Case "multihfighter"
+			deletemenu(hostmainmenu)
+			hostfighterselmenu = createhostselectionscreen()
+			setmenufx(hostfighterselmenu,"Lightning",20,0,20,480)
+			setmenufx(hostfighterselmenu,"Lightning",610,0,610,480)
+			
+			setmenufx(hostfighterselmenu,"Lightning",120,0,120,480)
+			setmenufx(hostfighterselmenu,"Lightning",510,0,510,480)
+		
+		Case "multicfighter"
+			deletemenu(hostmainmenu)
+			hostfighterselmenu = createclientselectionscreen()
+			setmenufx(hostfighterselmenu,"Lightning",20,0,20,480)
+			setmenufx(hostfighterselmenu,"Lightning",610,0,610,480)
+			
+			setmenufx(hostfighterselmenu,"Lightning",120,0,120,480)
+			setmenufx(hostfighterselmenu,"Lightning",510,0,510,480)
+		
+		
+		Case "multihexit"
+			deletemenu(hostmainmenu)
+			multiplaymenu = createmultiplaymenu()
+		
+		Case "stageselhost"
+		
+			selfight = getselectedmenuitem(stageselmenuhost)
+			For b:bga = EachIn bga_list
+				If b.bgnum = selfight Then
+					CURRENTSTAGE = b.bg
+					STAGENAME$ = b.bgname$
+					BGMUSIC = b.bgmusic
+					sendnetmessage(NETUSER$+" Selected stage:",STAGENAME$,"stagesel@"+STAGENAME$)
+				EndIf
+			Next
+			deletemenu(stageselmenuhost)
+			deletemenu(stageseltext)
+			hostmainmenu = createhostmainmenu()
+		
+		Case "stagesel"
+			selfight = getselectedmenuitem(stageselmenu)
+			For b:bga = EachIn bga_list
+				If b.bgnum = selfight Then
+					CURRENTSTAGE = b.bg
+					BGMUSIC = b.bgmusic
+				EndIf
+			Next
+			deletemenu(stageselmenu)
+			deletemenu(stageseltext)
+			p:player = New player
+			p.playernum = 1
+			p.team = 1
+			p.playertype$ = P1TYPE$
+			p.fid$ = P1TYPE$+Rnd(1,1000)
+			p.etype = P1ETYPE
+			p.char:fight = New fight
+			p.char.fighternum = 1
+			p.char.fname$ = P1FNAME$
+			p.char.fid$ = p.fid$
+			p:player = New player
+			p.playernum = 2
+			p.team = 2
+			p.playertype$ = P2TYPE$
+			p.fid$ = P2TYPE$+Rnd(1,1000)
+			p.etype = P2ETYPE
+			p.char:fight = New fight
+			p.char.fighternum = 2
+			p.char.fname$ = P2FNAME$
+			p.char.fid$ = p.fid$
+			loadfight()
+			ENGINESTATUS$ = "INIT"
+		
+		Case "hosttypesel"
+			P1ETYPE = getselectedmenuitem(p1hosttypesel)
+			P1FSELREADY = True
+			'If P1FSELREADY = True And P2FSELREADY = True Then
+			deletemenu(hostfighterselmenu)
+			deletemenu(p1hosttypesel)
+			hostmainmenu = createhostmainmenu()
+			SetGNetInt( localObj,NETPREADY,1 )
+		
+		Case "clienttypesel"
+			P1ETYPE = getselectedmenuitem(p1hosttypesel)
+			P1FSELREADY = True
+			'If P1FSELREADY = True And P2FSELREADY = True Then
+			deletemenu(hostfighterselmenu)
+			deletemenu(p1hosttypesel)
+			hostmainmenu = createclientmainmenu()
+			SetGNetInt( localObj,NETPREADY,1 )
+		
+		Case "multihstage"
+			deletemenu(hostmainmenu)
+			stageselmenuhost = createstageselectionscreenhost()
+			stageseltext = createstageseltext()
+			setmenufx(stageselmenuhost,"Lightning",0,20,640,20)
+		
+		Case "typesel"
+			P1ETYPE = getselectedmenuitem(p1typesel)
+			P1FSELREADY = True
+			If P1FSELREADY = True And P2FSELREADY = True Then
+			deletemenu(fighterselmenu)
+			deletemenu(p1typesel)
+			deletemenu(p2typesel)
+			stageselmenu = createstageselectionscreen()
+			stageseltext = createstageseltext()
+			setmenufx(stageselmenu,"Lightning",0,20,640,20)
+			DebugLog "p1 "+P1FNAME$+" p2"+P2FNAME$
+			EndIf
+		
+		Case "arcade"
+			deletemenu(mainmmenu)
+			
+			fighterselmenu = createselectionscreen()
+			allowp2menu(fighterselmenu)
+			setmenufx(fighterselmenu,"Lightning",20,0,20,480)
+			setmenufx(fighterselmenu,"Lightning",610,0,610,480)
+			
+			setmenufx(fighterselmenu,"Lightning",120,0,120,480)
+			setmenufx(fighterselmenu,"Lightning",510,0,510,480)
+		
+		Case "options"
+			deletemenu(mainmmenu)
+			optionsmenu = createoptionsmenu()
+		
+		Case "gcontrols"
+			deletemenu(optionsmenu)
+			controlsmenu = createcontrolsmenu()
+		
+		
+		Case "gconfig"
+			deletemenu(optionsmenu)
+			configmenu = creategconfigmenu()
+		
+		Case "gsettimer"
+			timermenu = createtimermenu()
+			setmenudeactive(configmenu)
+		
+		Case "gsetrounds"
+			roundsmenu = createroundsmenu()
+			setmenudeactive(configmenu)
+		
+		Case "gsetdiff"
+			diffimenu = createdifficultmenu()
+			setmenudeactive(configmenu)
+		
+		Case "gsetdisplay"
+			displaymenu = createdisplaymenu()
+			setmenudeactive(configmenu)
+		
+		
+		Case "gkeyreturn"
+			deletemenu(controlsmenu)
+			optionsmenu = createoptionsmenu()
+		
+		Case "gsetdevice"
+			pselectconfmenu = Selectconfigplayermenu()
+			setmenudeactive(controlsmenu)
+		
+		
+		Case "gplayerb"
+			Select getselectedmenuitem(pselectconfmenub)
+			
+				Case 0
+					MAINEDITPLAYER = 1
+				Case 1
+					MAINEDITPLAYER = 2
+			End Select
+			
+			deletemenu(pselectconfmenub)
+			keyconfigmenu = createkeyconfigMenu()
+		
+		
+		Case "gsetkeys"
+			pselectconfmenub = Selectconfigplayermenub()
+			setmenudeactive(controlsmenu)
+		
+		Case "gsetkkeyreturn"
+			deletemenu(keyconfigmenu)
+			setmenuactive(controlsmenu)
+		
+		Case "seldevice"
+		Select getselectedmenuitem(devicelistmenu)
+		
+			Case 0
+				Select MAINEDITPLAYER
+				
+					Case 1
+						P1INPUTDEV = 0
+					Case 2
+						P2INPUTDEV = 0
+			
+			
+			
+				End Select
+		
+			Default
+		   
+				Select MAINEDITPLAYER
+				
+					Case 1
+						P1INPUTDEV = getselectedmenuitem(devicelistmenu)
+						If P1INPUTDEV > 0 Then
+						P1DEVICE$="Joy:"
+						P1KEYUP = 0
+						P1KEYDN = 0
+						P1KEYLF = 0
+						P1KEYRT = 0
+						P1KEYWP = 0
+						P1KEYSP = 0
+						P1KEYWK = 0
+						P1KEYSK = 0
+						P1KEYST = 0
+						EndIf
+					
+					Case 2
+						P2INPUTDEV = getselectedmenuitem(devicelistmenu)
+						If P2INPUTDEV > 0 Then
+						P2DEVICE$="Joy:"
+						P2KEYUP = 0
+						P2KEYDN = 0
+						P2KEYLF = 0
+						P2KEYRT = 0
+						P2KEYWP = 0
+						P2KEYSP = 0
+						P2KEYWK = 0
+						P2KEYSK = 0
+						P2KEYST = 0
+						EndIf
+				End Select
+		End Select
+		deletemenu(devicelistmenu)
+		setmenuactive(controlsmenu)
+		
+		Case "gsetkkey"
+		Cls
+		DrawText "Press Key",0,0
+		Flip
+		Select getselectedmenuitem(keyconfigmenu)
+		
+		Case 0
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYUP = WaitKey()
+					updatemenuitemtext(keyconfigmenu,0,"UP KEY: "+P1KEYUP)
+				
+				'Default
+				'P1KEYUP = waitjoyaxis(P1INPUTDEV)
+				
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYUP = WaitKey()
+					updatemenuitemtext(keyconfigmenu,0,"UP KEY: "+P2KEYUP)
+				
+				
+				'Default
+				'P2KEYUP = waitjoyaxis(P2INPUTDEV)
+				
+				End Select
+			
+			End Select
+		
+		Case 1
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYDN = WaitKey()
+					updatemenuitemtext(keyconfigmenu,1,"DOWN KEY: "+P1KEYDN)
+				
+				'Default
+				'P1KEYDN = waitjoyaxis(P1INPUTDEV)
+				
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYDN = WaitKey()
+					updatemenuitemtext(keyconfigmenu,1,"DOWN KEY: "+P2KEYDN)
+				
+				
+				'Default
+				'P2KEYDN = waitjoyaxis(P2INPUTDEV)
+				
+				End Select
+			
+			End Select
+		
+		Case 2
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYLF = WaitKey()
+						updatemenuitemtext(keyconfigmenu,2,"LEFT KEY: "+P1KEYLF)
+		
+				
+				'Default
+				'P1KEYLF = waitjoyaxis(P1INPUTDEV)
+				
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYLF = WaitKey()
+						updatemenuitemtext(keyconfigmenu,2,"LEFT KEY: "+P2KEYDN)
+		
+				
+				'Default
+				'P2KEYLF = waitjoyaxis(P2INPUTDEV)
+				
+				End Select
+			
+			End Select
+		
+		Case 3
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYRT = WaitKey()
+						updatemenuitemtext(keyconfigmenu,3,"RIGHT KEY: "+P1KEYRT)
+		
+				
+				'Default
+				'P1KEYRT = waitjoyaxis(P1INPUTDEV)
+				
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYRT = WaitKey()
+						updatemenuitemtext(keyconfigmenu,3,"RIGHT KEY: "+P2KEYRT)
+		
+				
+				'Default
+				'P2KEYRT = waitjoyaxis(P2INPUTDEV)
+				
+				End Select
+			
+			End Select
+		
+		Case 4
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYWP = WaitKey()
+						updatemenuitemtext(keyconfigmenu,4,"WPUNCH KEY: "+P1KEYWP)
+		
+				
+				Default
+					P1KEYWP = waitjoycaps(P1INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,4,"WPUNCH JOY: "+P1KEYWP)
+		
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYWP = WaitKey()
+						updatemenuitemtext(keyconfigmenu,4,"WPUNCH KEY: "+P2KEYWP)
+		
+				
+				Default
+					P2KEYWP = waitjoycaps(P2INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,4,"WPUNCH JOY: "+P2KEYWP)
+		
+				End Select
+			
+			End Select
+		
+		Case 5
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYSP = WaitKey()
+						updatemenuitemtext(keyconfigmenu,5,"SPUNCH KEY: "+P1KEYSP)
+		
+				
+				Default
+					P1KEYSP = waitjoycaps(P1INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,5,"SPUNCH JOY: "+P1KEYSP)
+		
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYSP = WaitKey()
+						updatemenuitemtext(keyconfigmenu,5,"SPUNCH KEY: "+P2KEYSP)
+		
+				
+				Default
+					P2KEYSP = waitjoycaps(P2INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,5,"SPUNCH JOY: "+P2KEYSP)
+		
+				End Select
+			
+			End Select
+		
+		Case 6
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYWK = WaitKey()
+						updatemenuitemtext(keyconfigmenu,6,"WKICK KEY: "+P1KEYWK)
+		
+				
+				Default
+					P1KEYWK = waitjoycaps(P1INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,6,"WKICK JOY: "+P1KEYWK)
+		
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYWK = WaitKey()
+						updatemenuitemtext(keyconfigmenu,6,"WKICK KEY: "+P2KEYWK)
+		
+				
+				Default
+					P2KEYWK = waitjoycaps(P2INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,6,"WKICK JOY: "+P2KEYWK)
+		
+				End Select
+			
+			End Select
+		
+		Case 7
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYSK = WaitKey()
+						updatemenuitemtext(keyconfigmenu,7,"SKICK KEY: "+P1KEYSK)
+		
+				
+				Default
+					P1KEYSK = waitjoycaps(P1INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,7,"SKICK JOY: "+P1KEYSK)
+		
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYSK = WaitKey()
+						updatemenuitemtext(keyconfigmenu,7,"SKICK KEY: "+P2KEYSK)
+		
+				
+				Default
+					P2KEYSK = waitjoycaps(P2INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,7,"SKICK JOY: "+P2KEYSK)
+		
+				End Select
+		
+			End Select
+		Case 8
+			Select MAINEDITPLAYER
+		
+			Case 1
+				Select P1INPUTDEV
+				
+				Case 0
+					P1KEYST = WaitKey()
+						updatemenuitemtext(keyconfigmenu,8,"START KEY: "+P1KEYST)
+		
+				
+				Default
+					P1KEYST = waitjoycaps(P1INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,8,"START JOY: "+P1KEYST)
+		
+				End Select
+			
+			Case 2
+				Select P2INPUTDEV
+				
+				Case 0
+					P2KEYST = WaitKey()
+						updatemenuitemtext(keyconfigmenu,8,"START KEY: "+P2KEYST)
+		
+				
+				Default
+					P2KEYST = waitjoycaps(P2INPUTDEV)
+						updatemenuitemtext(keyconfigmenu,8,"START JOY: "+P2KEYST)
+		
+				End Select
+			
+			End Select			
+			
+		End Select
+		
+		Case "gplayer"
+			Select getselectedmenuitem(pselectconfmenu)
+			
+				Case 0
+				MAINEDITPLAYER = 1
+				Case 1
+				MAINEDITPLAYER = 2
+			End Select
+			
+			deletemenu(pselectconfmenu)
+			devicelistmenu = createdevicelistmenu()
+		
+		
+		
+		
+		
+		Case "ggdisplay"
+			Select getselectedmenuitem(displaymenu)
+			
+				Case 0
+					MAINGAMEDISPLAY$ = "Win"
+					Graphics 640,480,0,60
+					SetImageFont fntArialD
+					SetScale(2,2)
+					SetBlend(ALPHABLEND)
+				Case 1
+					MAINGAMEDISPLAY$ = "FS"
+					Graphics 640,480,16,60
+					SetImageFont fntArialD
+					SetScale(2,2)
+					SetBlend(ALPHABLEND)
+			End Select
+			updatemenuitemtext(configmenu,3,"Display "+MAINGAMEDISPLAY$)
+			deletemenu(displaymenu)
+			setmenuactive(configmenu)
+		
+		
+		Case "ggdiffi"
+			Select getselectedmenuitem(diffimenu)
+			
+				Case 0
+					MAINGAMEDIFFICULTY$ = "Easy"
+				
+				
+				Case 1
+					MAINGAMEDIFFICULTY$ = "Medium"
+				
+				Case 2
+					MAINGAMEDIFFICULTY$ = "Hard"
+				
+				Case 3
+					MAINGAMEDIFFICULTY$ = "Elite"
+			
+			
+			End Select
+			updatemenuitemtext(configmenu,2,"Difficulty "+MAINGAMEDIFFICULTY$)
+			deletemenu(diffimenu)
+			setmenuactive(configmenu)
+		
+		Case "ggrounds"
+			Select getselectedmenuitem(roundsmenu)
+			
+				Case 0
+					MAINGAMEROUNDS = 2
+				
+				
+				Case 1
+					MAINGAMEROUNDS = 4
+				
+				Case 2
+					MAINGAMEROUNDS = 6
+				
+				Case 3
+					MAINGAMEROUNDS = 8
+			
+			
+			End Select
+			updatemenuitemtext(configmenu,1,"Rounds "+MAINGAMEROUNDS)
+			deletemenu(roundsmenu)
+			setmenuactive(configmenu)
+		
+		Case "ggtimer"
+			Select getselectedmenuitem(timermenu)
+			
+				Case 0
+					MAINGAMETIMER = 30
+				
+				
+				Case 1
+					MAINGAMETIMER = 60
+				
+				Case 2
+					MAINGAMETIMER = 90
+				
+				Case 3
+					MAINGAMETIMER = 00
+			
+			
+			End Select
+			updatemenuitemtext(configmenu,0,"Timer "+MAINGAMETIMER)
+			deletemenu(timermenu)
+			setmenuactive(configmenu)
+		
+		
+		Case "greturn"
+			deletemenu(optionsmenu)
+			mainmmenu = createmainmenu()
+		
+		
+		Case "gconfigreturn"
+			deletemenu(configmenu)
+			optionsmenu = createoptionsmenu()
+		
+		
+		
+		Case "exitgame"
+			End
+		
+		Case "hostfightersel"
+			selfight = getselectedmenuitem(hostfighterselmenu)
+			For d:fighter = EachIn fighter_list
+			If d.fighternum = selfight+1 Then
+			P1FNAME$ = d.fname$
+			SetGNetString( localObj,NETFNAME,d.fname$ )
+			sendnetmessage(NETUSER$+" Selected Fighter:",P1FNAME$,"fighter@"+P1FNAME$)
+			EndIf
+			Next
+			p1hosttypesel = createplayer1typehost()
+			setmenudeactive(hostfighterselmenu)
+		
+		
+		Case "clientfightersel"
+			selfight = getselectedmenuitem(hostfighterselmenu)
+			For d:fighter = EachIn fighter_list
+			If d.fighternum = selfight+1 Then
+			P1FNAME$ = d.fname$
+			SetGNetString( localObj,NETFNAME,d.fname$ )
+			sendnetmessage(NETUSER$+" Selected Fighter:",P1FNAME$,"fighter@"+P1FNAME$)
+			EndIf
+			Next
+			p1hosttypesel = createplayer1typeclient()
+			setmenudeactive(hostfighterselmenu)
+		
+		Case "fightersel"
+			selfight = getselectedmenuitem(fighterselmenu)
+			For d:fighter = EachIn fighter_list
+			If d.fighternum = selfight+1 Then
+			P1FNAME$ = d.fname$
+			EndIf
+			Next
+			If P2TYPE$ = "COMP" Then
+			poop = 0
+			For d:fighter = EachIn fighter_list
+			selfight = selfight + 1
+			Next
+			selfight2 = Rnd(1,selfight)
+			For d:fighter = EachIn fighter_list
+			If d.fighternum = selfight2 Then
+			P2FNAME$ = d.fname$
+			EndIf
+			Next
+			
+			EndIf
+			p1typesel = createplayer1type()
+			setmenudeactive(fighterselmenu)
 	
-GNETSUCCESS = GNetConnect( HOSTX,NETHOSTIP$,PORTX, 10000 )
-NETTEAM = 2
-HOSTJOIN = 2
-NETWID$ = NETUSER$+Rnd(1,9999)
-	SetGNetString( localObj,NETID,NETWID$ )
-
-DebugLog "connecting to "+NETHOSTIP$+" Port:"+PORTX
-If Not GNETSUCCESS Then 
-	deletemenu(mhostmenu)
-	multiplaymenu = createmultiplaymenu()
-	Notify "Could not join Game"
-Else
-
-	messageObj:TGNetObject = CreateGNetMessage:TGNetObject( HOSTX )
-deletemenu(mhostmenu)
-hostmainmenu = createclientmainmenu()
-EndIf
-
-Case "multihconnect"
-SetGNetString( localObj,NETNAME,NETUSER$ )
-	SetGNetInt( localObj,NETPREADY,0 )
-	GNETSUCCESS = GNetListen( HOSTX,PORTX )
-	NETTEAM = 1
-	HOSTJOIN = 1
-	NETWID$ = NETUSER$+Rnd(1,9999)
-	SetGNetString( localObj,NETID,NETWID$ )
-
-		If HOSTX = Null Then Notify "No Host object."
-	If Not GNETSUCCESS Then 
-	deletemenu(mhostmenu)
-	multiplaymenu = createmultiplaymenu()
-	Notify "Could not host Game"
-	Else
-	deletemenu(mhostmenu)
-	hostmainmenu = createhostmainmenu()
-	'localObj:TGNetObject = CreateGNetObject:TGNetObject( HOSTX )
-	messageObj:TGNetObject = CreateGNetMessage:TGNetObject( HOSTX )
-	EndIf
 	
-Case "multihfighter"
-deletemenu(hostmainmenu)
-hostfighterselmenu = createhostselectionscreen()
-setmenufx(hostfighterselmenu,"Lightning",20,0,20,480)
-setmenufx(hostfighterselmenu,"Lightning",610,0,610,480)
-
-setmenufx(hostfighterselmenu,"Lightning",120,0,120,480)
-setmenufx(hostfighterselmenu,"Lightning",510,0,510,480)
-
-Case "multicfighter"
-deletemenu(hostmainmenu)
-hostfighterselmenu = createclientselectionscreen()
-setmenufx(hostfighterselmenu,"Lightning",20,0,20,480)
-setmenufx(hostfighterselmenu,"Lightning",610,0,610,480)
-
-setmenufx(hostfighterselmenu,"Lightning",120,0,120,480)
-setmenufx(hostfighterselmenu,"Lightning",510,0,510,480)
-
-
-Case "multihexit"
-deletemenu(hostmainmenu)
-multiplaymenu = createmultiplaymenu()
-
-Case "stageselhost"
-
-poop = getselectedmenuitem(stageselmenuhost)
-For b:bga = EachIn bga_list
-If b.bgnum = poop Then
-CURRENTSTAGE = b.bg
-STAGENAME$ = b.bgname$
-BGMUSIC = b.bgmusic
-sendnetmessage(NETUSER$+" Selected stage:",STAGENAME$,"stagesel@"+STAGENAME$)
-EndIf
-Next
-deletemenu(stageselmenuhost)
-deletemenu(stageseltext)
-hostmainmenu = createhostmainmenu()
-
-Case "stagesel"
-poop = getselectedmenuitem(stageselmenu)
-For b:bga = EachIn bga_list
-If b.bgnum = poop Then
-CURRENTSTAGE = b.bg
-BGMUSIC = b.bgmusic
-EndIf
-Next
-deletemenu(stageselmenu)
-deletemenu(stageseltext)
-p:player = New player
-p.playernum = 1
-p.team = 1
-p.playertype$ = P1TYPE$
-p.fid$ = P1TYPE$+Rnd(1,1000)
-p.etype = P1ETYPE
-p.char:fight = New fight
-p.char.fighternum = 1
-p.char.fname$ = P1FNAME$
-p.char.fid$ = p.fid$
-p:player = New player
-p.playernum = 2
-p.team = 2
-p.playertype$ = P2TYPE$
-p.fid$ = P2TYPE$+Rnd(1,1000)
-p.etype = P2ETYPE
-p.char:fight = New fight
-p.char.fighternum = 2
-p.char.fname$ = P2FNAME$
-p.char.fid$ = p.fid$
-loadfight()
-ENGINESTATUS$ = "INIT"
-
-Case "hosttypesel"
-P1ETYPE = getselectedmenuitem(p1hosttypesel)
-P1FSELREADY = True
-'If P1FSELREADY = True And P2FSELREADY = True Then
-deletemenu(hostfighterselmenu)
-deletemenu(p1hosttypesel)
-hostmainmenu = createhostmainmenu()
-SetGNetInt( localObj,NETPREADY,1 )
-
-Case "clienttypesel"
-P1ETYPE = getselectedmenuitem(p1hosttypesel)
-P1FSELREADY = True
-'If P1FSELREADY = True And P2FSELREADY = True Then
-deletemenu(hostfighterselmenu)
-deletemenu(p1hosttypesel)
-hostmainmenu = createclientmainmenu()
-SetGNetInt( localObj,NETPREADY,1 )
-
-Case "multihstage"
-deletemenu(hostmainmenu)
-stageselmenuhost = createstageselectionscreenhost()
-stageseltext = createstageseltext()
-setmenufx(stageselmenuhost,"Lightning",0,20,640,20)
-
-Case "typesel"
-P1ETYPE = getselectedmenuitem(p1typesel)
-P1FSELREADY = True
-If P1FSELREADY = True And P2FSELREADY = True Then
-deletemenu(fighterselmenu)
-deletemenu(p1typesel)
-deletemenu(p2typesel)
-stageselmenu = createstageselectionscreen()
-stageseltext = createstageseltext()
-setmenufx(stageselmenu,"Lightning",0,20,640,20)
-DebugLog "p1 "+P1FNAME$+" p2"+P2FNAME$
-EndIf
-
-Case "arcade"
-deletemenu(mainmmenu)
-
-fighterselmenu = createselectionscreen()
-allowp2menu(fighterselmenu)
-setmenufx(fighterselmenu,"Lightning",20,0,20,480)
-setmenufx(fighterselmenu,"Lightning",610,0,610,480)
-
-setmenufx(fighterselmenu,"Lightning",120,0,120,480)
-setmenufx(fighterselmenu,"Lightning",510,0,510,480)
-
-Case "options"
-deletemenu(mainmmenu)
-optionsmenu = createoptionsmenu()
-
-Case "gcontrols"
-deletemenu(optionsmenu)
-controlsmenu = createcontrolsmenu()
-
-
-Case "gconfig"
-deletemenu(optionsmenu)
-configmenu = creategconfigmenu()
-
-Case "gsettimer"
-timermenu = createtimermenu()
-setmenudeactive(configmenu)
-
-Case "gsetrounds"
-roundsmenu = createroundsmenu()
-setmenudeactive(configmenu)
-
-Case "gsetdiff"
-diffimenu = createdifficultmenu()
-setmenudeactive(configmenu)
-
-Case "gsetdisplay"
-displaymenu = createdisplaymenu()
-setmenudeactive(configmenu)
-
-
-Case "gkeyreturn"
-deletemenu(controlsmenu)
-optionsmenu = createoptionsmenu()
-
-Case "gsetdevice"
-pselectconfmenu = Selectconfigplayermenu()
-setmenudeactive(controlsmenu)
-
-
-Case "gplayerb"
-Select getselectedmenuitem(pselectconfmenub)
-
-Case 0
-MAINEDITPLAYER = 1
-Case 1
-MAINEDITPLAYER = 2
-End Select
-
-deletemenu(pselectconfmenub)
-keyconfigmenu = createkeyconfigMenu()
-
-
-Case "gsetkeys"
-pselectconfmenub = Selectconfigplayermenub()
-setmenudeactive(controlsmenu)
-
-Case "gsetkkeyreturn"
-deletemenu(keyconfigmenu)
-setmenuactive(controlsmenu)
-
-Case "seldevice"
-Select getselectedmenuitem(devicelistmenu)
-
-Case 0
-	Select MAINEDITPLAYER
 	
-	Case 1
-	P1INPUTDEV = 0
-	Case 2
-	P2INPUTDEV = 0
-
-
-
 	End Select
-
-Default
-   
-	Select MAINEDITPLAYER
-	
-	Case 1
-	P1INPUTDEV = getselectedmenuitem(devicelistmenu)
-	If P1INPUTDEV > 0 Then
-	P1DEVICE$="Joy:"
-	P1KEYUP = 0
-	P1KEYDN = 0
-	P1KEYLF = 0
-	P1KEYRT = 0
-	P1KEYWP = 0
-	P1KEYSP = 0
-	P1KEYWK = 0
-	P1KEYSK = 0
-	P1KEYST = 0
-	EndIf
-	
-	Case 2
-	P2INPUTDEV = getselectedmenuitem(devicelistmenu)
-	If P2INPUTDEV > 0 Then
-	P2DEVICE$="Joy:"
-	P2KEYUP = 0
-	P2KEYDN = 0
-	P2KEYLF = 0
-	P2KEYRT = 0
-	P2KEYWP = 0
-	P2KEYSP = 0
-	P2KEYWK = 0
-	P2KEYSK = 0
-	P2KEYST = 0
-	EndIf
-	End Select
-End Select
-deletemenu(devicelistmenu)
-setmenuactive(controlsmenu)
-
-Case "gsetkkey"
-Cls
-DrawText "Press Key",0,0
-Flip
-Select getselectedmenuitem(keyconfigmenu)
-
-Case 0
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYUP = WaitKey()
-		updatemenuitemtext(keyconfigmenu,0,"UP KEY: "+P1KEYUP)
-		
-		'Default
-		'P1KEYUP = waitjoyaxis(P1INPUTDEV)
-		
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYUP = WaitKey()
-		updatemenuitemtext(keyconfigmenu,0,"UP KEY: "+P2KEYUP)
-		
-		
-		'Default
-		'P2KEYUP = waitjoyaxis(P2INPUTDEV)
-		
-		End Select
-	
-	End Select
-
-Case 1
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYDN = WaitKey()
-		updatemenuitemtext(keyconfigmenu,1,"DOWN KEY: "+P1KEYDN)
-		
-		'Default
-		'P1KEYDN = waitjoyaxis(P1INPUTDEV)
-		
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYDN = WaitKey()
-		updatemenuitemtext(keyconfigmenu,1,"DOWN KEY: "+P2KEYDN)
-		
-		
-		'Default
-		'P2KEYDN = waitjoyaxis(P2INPUTDEV)
-		
-		End Select
-	
-	End Select
-
-Case 2
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYLF = WaitKey()
-				updatemenuitemtext(keyconfigmenu,2,"LEFT KEY: "+P1KEYLF)
-
-		
-		'Default
-		'P1KEYLF = waitjoyaxis(P1INPUTDEV)
-		
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYLF = WaitKey()
-				updatemenuitemtext(keyconfigmenu,2,"LEFT KEY: "+P2KEYDN)
-
-		
-		'Default
-		'P2KEYLF = waitjoyaxis(P2INPUTDEV)
-		
-		End Select
-	
-	End Select
-
-Case 3
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYRT = WaitKey()
-				updatemenuitemtext(keyconfigmenu,3,"RIGHT KEY: "+P1KEYRT)
-
-		
-		'Default
-		'P1KEYRT = waitjoyaxis(P1INPUTDEV)
-		
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYRT = WaitKey()
-				updatemenuitemtext(keyconfigmenu,3,"RIGHT KEY: "+P2KEYRT)
-
-		
-		'Default
-		'P2KEYRT = waitjoyaxis(P2INPUTDEV)
-		
-		End Select
-	
-	End Select
-
-Case 4
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYWP = WaitKey()
-				updatemenuitemtext(keyconfigmenu,4,"WPUNCH KEY: "+P1KEYWP)
-
-		
-		Default
-		P1KEYWP = waitjoycaps(P1INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,4,"WPUNCH JOY: "+P1KEYWP)
-
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYWP = WaitKey()
-				updatemenuitemtext(keyconfigmenu,4,"WPUNCH KEY: "+P2KEYWP)
-
-		
-		Default
-		P2KEYWP = waitjoycaps(P2INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,4,"WPUNCH JOY: "+P2KEYWP)
-
-		End Select
-	
-	End Select
-
-Case 5
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYSP = WaitKey()
-				updatemenuitemtext(keyconfigmenu,5,"SPUNCH KEY: "+P1KEYSP)
-
-		
-		Default
-		P1KEYSP = waitjoycaps(P1INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,5,"SPUNCH JOY: "+P1KEYSP)
-
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYSP = WaitKey()
-				updatemenuitemtext(keyconfigmenu,5,"SPUNCH KEY: "+P2KEYSP)
-
-		
-		Default
-		P2KEYSP = waitjoycaps(P2INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,5,"SPUNCH JOY: "+P2KEYSP)
-
-		End Select
-	
-	End Select
-
-Case 6
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYWK = WaitKey()
-				updatemenuitemtext(keyconfigmenu,6,"WKICK KEY: "+P1KEYWK)
-
-		
-		Default
-		P1KEYWK = waitjoycaps(P1INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,6,"WKICK JOY: "+P1KEYWK)
-
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYWK = WaitKey()
-				updatemenuitemtext(keyconfigmenu,6,"WKICK KEY: "+P2KEYWK)
-
-		
-		Default
-		P2KEYWK = waitjoycaps(P2INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,6,"WKICK JOY: "+P2KEYWK)
-
-		End Select
-	
-	End Select
-
-Case 7
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYSK = WaitKey()
-				updatemenuitemtext(keyconfigmenu,7,"SKICK KEY: "+P1KEYSK)
-
-		
-		Default
-		P1KEYSK = waitjoycaps(P1INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,7,"SKICK JOY: "+P1KEYSK)
-
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYSK = WaitKey()
-				updatemenuitemtext(keyconfigmenu,7,"SKICK KEY: "+P2KEYSK)
-
-		
-		Default
-		P2KEYSK = waitjoycaps(P2INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,7,"SKICK JOY: "+P2KEYSK)
-
-		End Select
-
-	End Select
-Case 8
-	Select MAINEDITPLAYER
-
-	Case 1
-		Select P1INPUTDEV
-		
-		Case 0
-		P1KEYST = WaitKey()
-				updatemenuitemtext(keyconfigmenu,8,"START KEY: "+P1KEYST)
-
-		
-		Default
-		P1KEYST = waitjoycaps(P1INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,8,"START JOY: "+P1KEYST)
-
-		End Select
-	
-	Case 2
-		Select P2INPUTDEV
-		
-		Case 0
-		P2KEYST = WaitKey()
-				updatemenuitemtext(keyconfigmenu,8,"START KEY: "+P2KEYST)
-
-		
-		Default
-		P2KEYST = waitjoycaps(P2INPUTDEV)
-				updatemenuitemtext(keyconfigmenu,8,"START JOY: "+P2KEYST)
-
-		End Select
-	
-	End Select			
-	
-End Select
-
-Case "gplayer"
-Select getselectedmenuitem(pselectconfmenu)
-
-Case 0
-MAINEDITPLAYER = 1
-Case 1
-MAINEDITPLAYER = 2
-End Select
-
-deletemenu(pselectconfmenu)
-devicelistmenu = createdevicelistmenu()
-
-
-
-
-
-Case "ggdisplay"
-Select getselectedmenuitem(displaymenu)
-
-Case 0
-MAINGAMEDISPLAY$ = "Win"
-Graphics 640,480,0,60
-SetImageFont fntArialD
-SetScale(2,2)
-SetBlend(ALPHABLEND)
-Case 1
-MAINGAMEDISPLAY$ = "FS"
-Graphics 640,480,16,60
-SetImageFont fntArialD
-SetScale(2,2)
-SetBlend(ALPHABLEND)
-End Select
-updatemenuitemtext(configmenu,3,"Display "+MAINGAMEDISPLAY$)
-deletemenu(displaymenu)
-setmenuactive(configmenu)
-
-
-Case "ggdiffi"
-Select getselectedmenuitem(diffimenu)
-
-Case 0
-MAINGAMEDIFFICULTY$ = "Easy"
-
-
-Case 1
-MAINGAMEDIFFICULTY$ = "Medium"
-
-Case 2
-MAINGAMEDIFFICULTY$ = "Hard"
-
-Case 3
-MAINGAMEDIFFICULTY$ = "Elite"
-
-
-End Select
-updatemenuitemtext(configmenu,2,"Difficulty "+MAINGAMEDIFFICULTY$)
-deletemenu(diffimenu)
-setmenuactive(configmenu)
-
-Case "ggrounds"
-Select getselectedmenuitem(roundsmenu)
-
-Case 0
-MAINGAMEROUNDS = 2
-
-
-Case 1
-MAINGAMEROUNDS = 4
-
-Case 2
-MAINGAMEROUNDS = 6
-
-Case 3
-MAINGAMEROUNDS = 8
-
-
-End Select
-updatemenuitemtext(configmenu,1,"Rounds "+MAINGAMEROUNDS)
-deletemenu(roundsmenu)
-setmenuactive(configmenu)
-
-Case "ggtimer"
-Select getselectedmenuitem(timermenu)
-
-Case 0
-MAINGAMETIMER = 30
-
-
-Case 1
-MAINGAMETIMER = 60
-
-Case 2
-MAINGAMETIMER = 90
-
-Case 3
-MAINGAMETIMER = 00
-
-
-End Select
-updatemenuitemtext(configmenu,0,"Timer "+MAINGAMETIMER)
-deletemenu(timermenu)
-setmenuactive(configmenu)
-
-
-Case "greturn"
-deletemenu(optionsmenu)
-mainmmenu = createmainmenu()
-
-
-Case "gconfigreturn"
-deletemenu(configmenu)
-optionsmenu = createoptionsmenu()
-
-
-
-Case "exitgame"
-End
-
-Case "hostfightersel"
-poop = getselectedmenuitem(hostfighterselmenu)
-For d:fighter = EachIn fighter_list
-If d.fighternum = poop+1 Then
-P1FNAME$ = d.fname$
-SetGNetString( localObj,NETFNAME,d.fname$ )
-sendnetmessage(NETUSER$+" Selected Fighter:",P1FNAME$,"fighter@"+P1FNAME$)
-EndIf
-Next
-p1hosttypesel = createplayer1typehost()
-setmenudeactive(hostfighterselmenu)
-
-
-Case "clientfightersel"
-poop = getselectedmenuitem(hostfighterselmenu)
-For d:fighter = EachIn fighter_list
-If d.fighternum = poop+1 Then
-P1FNAME$ = d.fname$
-SetGNetString( localObj,NETFNAME,d.fname$ )
-sendnetmessage(NETUSER$+" Selected Fighter:",P1FNAME$,"fighter@"+P1FNAME$)
-EndIf
-Next
-p1hosttypesel = createplayer1typeclient()
-setmenudeactive(hostfighterselmenu)
-
-Case "fightersel"
-poop = getselectedmenuitem(fighterselmenu)
-For d:fighter = EachIn fighter_list
-If d.fighternum = poop+1 Then
-P1FNAME$ = d.fname$
-EndIf
-Next
-If P2TYPE$ = "COMP" Then
-poop = 0
-For d:fighter = EachIn fighter_list
-poop = poop + 1
-Next
-poop2 = Rnd(1,poop)
-For d:fighter = EachIn fighter_list
-If d.fighternum = poop2 Then
-P2FNAME$ = d.fname$
-EndIf
-Next
-
-EndIf
-p1typesel = createplayer1type()
-setmenudeactive(fighterselmenu)
-
-
-
-End Select
-menufunct$ = ""
-Return menufunct$
+	menufunct$ = ""
+	Return menufunct$
 End Function
 
 
@@ -2385,75 +2384,149 @@ Next
 End Function
 
 Function getselectionfighters()
-tempdir=ReadDir(CurrentDir$()+"\Fighters\")
-DebugLog tempdir
-fightnum = 0
-Repeat
-tempfile$=NextFile$(tempdir)
-DebugLog tempfile$+" <----- file?"
-If FileType(CurrentDir$()+"\Fighters\"+tempfile$) = 2 And tempfile$ <> "." And tempfile$ <> ".." Then
-d:fighter = New fighter
-DebugLog "made a fighter"
-fightnum = fightnum + 1
-d.fighternum = fightnum
-tempshitass = tempshitass + 1
-d.fname$ = tempfile$
-d.fid$ = tempfile$
-d.fanim$ = "intro"
-tempdir2=ReadDir(CurrentDir$()+"\Fighters\"+tempfile$)
-tempfile2$ = "p"
-While tempfile2$ <> ""
-tempfile2$=NextFile$(tempdir2)
-tempfile2$ = Lower(tempfile2$)
-If Instr(tempfile2$,".mfe",1) <> 0 Or Instr(tempfile2$,".MFE",1) <> 0 Then
-d.dfile$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
-If d.dfile$ <> "" Then
-d.Stream = OpenFile(d.dfile$)
-'print "datafile "+p\datafile$
-'turd = ReadInt(d.Stream)
-d.charid$ = ReadString(d.Stream,5)
-d.vit = ReadInt(d.Stream)
-d.spd = ReadInt(d.Stream)
-d.def = ReadInt(d.Stream)
-d.pow = ReadInt(d.Stream)
-d.spr = ReadInt(d.Stream)
-d.will = ReadInt(d.Stream)
-CloseFile( d.Stream ) 
-EndIf
-
-EndIf
-If Instr(tempfile2$,".png",1) <> 0 Or Instr(tempfile2$,".PNG",1) <> 0 Then
-If Instr(tempfile2$,"selb",1) <> 0 Then
-d.selbpath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
-d.selb = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
-'MaskImage d.selb,255,0,255
-EndIf
-If Instr(tempfile2$,"sels",1) <> 0 Then
-d.selspath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
-
-d.sels = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
-'MaskImage d.sels,255,0,255
-EndIf
-
-EndIf
-Cls
-SetScale( 2,2 )
-SetImageFont(fntArialA)
-DrawImage mainload,0,0
-'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
-DrawText "Loading: Fighter "+tempfile$,0,0
-'a debug code
-'If maindebug = True Then 
-'Print startdir$+"\sprites\"+tempfile$
-Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
-SetScale( 1,1 )
-
-
-Wend
-EndIf
-
-If tempfile$="" Then Exit 
-Forever
+	'optimized for faster loading.
+	tempdir=ReadDir(CurrentDir$()+"\Fighters\")
+	DebugLog tempdir
+	fightnum = 0
+	Repeat
+		tempfile$=NextFile$(tempdir)
+		DebugLog tempfile$+" <----- file?"
+		If FileType(CurrentDir$()+"\Fighters\"+tempfile$) = 2 And tempfile$ <> "." And tempfile$ <> ".." And tempfile$ <> ".svn" Then
+			'let's wait to make the fighter until we know the data is even there..
+			
+			'd:fighter = New fighter
+			'DebugLog "made a fighter"
+			'fightnum = fightnum + 1
+			'd.fighternum = fightnum
+			'not sure why io used that variable name lol
+			'tempshitass = tempshitass + 1
+			'tempint = tempint + 1
+			'd.fname$ = tempfile$
+			'd.fid$ = tempfile$
+			'd.fanim$ = "intro"
+			'tempdir2=ReadDir(CurrentDir$()+"\Fighters\"+tempfile$)
+			'tempfile2$ = "p"
+			
+			'**************************************************************************************************************
+			'going to speed this up, no point in iterating through each file if we know exactly what we need out of the dir
+			'**************************************************************************************************************
+			
+			If FileType(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile$+".mfe") = 1 Then
+			
+				d:fighter = New fighter
+				fightnum = fightnum + 1
+				d.fighternum = fightnum
+				d.fname$ = tempfile$
+				'might want to check on that id
+				d.fid$ = tempfile$
+				d.fanim$ = "intro"	
+				d.dfile$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile$+".mfe"			
+				d.Stream = ReadFile(d.dfile$)
+				d.charid$ = ReadString(d.Stream,5)
+				d.vit = ReadInt(d.Stream)
+				d.spd = ReadInt(d.Stream)
+				d.def = ReadInt(d.Stream)
+				d.pow = ReadInt(d.Stream)
+				d.spr = ReadInt(d.Stream)
+				d.will = ReadInt(d.Stream)
+				CloseFile( d.Stream ) 			
+			
+			
+				'get selection images
+				If FileType(CurrentDir$()+"\Fighters\"+tempfile$+"\selb.png") = 1 Then
+				
+					d.selbpath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\selb.png"
+					d.selb = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\selb.png")
+				
+				Else
+				
+					d.selbpath$ = CurrentDir$()+"\sprites\selb.png"
+					d.selb = LoadImage(CurrentDir$()+"\sprites\selb.png")					
+				
+				EndIf
+				If FileType(CurrentDir$()+"\Fighters\"+tempfile$+"\sels.png") = 1 Then
+				
+					d.selspath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\sels.png"
+					d.sels = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\sels.png")
+				
+				Else
+				
+					d.selspath$ = CurrentDir$()+"\sprites\sels.png"
+					d.sels = LoadImage(CurrentDir$()+"\sprites\sels.png")					
+				
+				EndIf
+				Cls
+				SetScale( 2,2 )
+				SetImageFont(fntArialA)
+				DrawImage mainload,0,0
+				'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
+				DrawText "Loading: Fighter "+tempfile$,0,0
+				'a debug code
+				'If maindebug = True Then 
+				'Print startdir$+"\sprites\"+tempfile$
+				Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
+				SetScale( 1,1 )				
+							
+			EndIf
+			Rem
+			While tempfile2$ <> ""
+				tempfile2$=NextFile$(tempdir2)
+				tempfile2$ = Lower(tempfile2$)
+				If Instr(tempfile2$,".mfe",1) <> 0 Or Instr(tempfile2$,".MFE",1) <> 0 Then
+					d.dfile$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
+					If d.dfile$ <> "" Then
+					d.Stream = OpenFile(d.dfile$)
+					'print "datafile "+p\datafile$
+					'turd = ReadInt(d.Stream)
+					d.charid$ = ReadString(d.Stream,5)
+					d.vit = ReadInt(d.Stream)
+					d.spd = ReadInt(d.Stream)
+					d.def = ReadInt(d.Stream)
+					d.pow = ReadInt(d.Stream)
+					d.spr = ReadInt(d.Stream)
+					d.will = ReadInt(d.Stream)
+					CloseFile( d.Stream ) 
+					EndIf
+					
+					EndIf
+					If Instr(tempfile2$,".png",1) <> 0 Or Instr(tempfile2$,".PNG",1) <> 0 Then
+					If Instr(tempfile2$,"selb",1) <> 0 Then
+					d.selbpath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
+					d.selb = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
+					'MaskImage d.selb,255,0,255
+					EndIf
+					If Instr(tempfile2$,"sels",1) <> 0 Then
+					d.selspath$ = CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$
+					
+					d.sels = LoadImage(CurrentDir$()+"\Fighters\"+tempfile$+"\"+tempfile2$)
+					'MaskImage d.sels,255,0,255
+					EndIf
+				
+				EndIf
+				
+				
+				
+				
+				Cls
+				SetScale( 2,2 )
+				SetImageFont(fntArialA)
+				DrawImage mainload,0,0
+				'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
+				DrawText "Loading: Fighter "+tempfile$,0,0
+				'a debug code
+				'If maindebug = True Then 
+				'Print startdir$+"\sprites\"+tempfile$
+				Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
+				SetScale( 1,1 )
+				
+			
+			Wend
+			End Rem
+			
+		EndIf
+		
+		If tempfile$="" Then Exit 
+	Forever
 End Function 
 
 
@@ -2477,7 +2550,7 @@ tempdir=ReadDir(startdir$+"\sprites\")
 tempfile$ = "poop"
 Repeat
 tempfile$=NextFile$(tempdir)
-Print "tempfile: "+tempfile$+ startdir$+"\sprites\" 
+Print "tempfile: "+tempfile$+startdir$+"\sprites\" 
 'If tempdir finds a png file it will load it.. otherwise its skipped
 If Instr(Lower(tempfile$),".png",1) <> 0 Then
 'im only gonna allow 20 frames in an animation.. mainly because the loading time will take For ever To load
@@ -2540,41 +2613,50 @@ End Function
 
 Function getbgs()
 
-bgdir=ReadDir(startdir$+"\bgs\")
-bgnum = 0
-Repeat
-bgfile$=NextFile$(bgdir)
-bgfile$ = Lower(bgfile$)
-	If Instr(bgfile$,".png",1) <> 0 And Instr(bgfile$,"_thumb",1) = 0 Then
-	b:bga = New bga
-	
-	b.bgnum = bgnum
-	bgnum = bgnum + 1
-	b.bg = LoadImage(startdir$+"\bgs\"+bgfile$,0)
-	If FileType(startdir$+"\music\"+Replace(bgfile$,".png",".ogg")) <> 0 Then 
-	b.bgmusic = LoadSound(startdir$+"\music\"+Replace(bgfile$,".png",".ogg"),True)
-	Else
-	b.bgmusic = LoadSound(startdir$+"\music\ryu.ogg",True)
-	EndIf
-	'lets take out the .png To use the file as the name of the background
-	DebugLog "Made file from "+bgfile$
-	b.bgname$ = Replace(bgfile$,".png","")
-	b.thumbgpath$ = b.bgname$+"_thumb.png"
-	EndIf
-Cls
-SetScale( 2,2 )
-SetImageFont(fntArialA)
-DrawImage mainload,0,0
-'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
-DrawText "Loading: Stages "+bgfile$,0,0
-'a debug code
-'If maindebug = True Then 
-'Print startdir$+"\sprites\"+tempfile$
-Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
-SetScale( 1,1 )
-'If we run out of files in the bg folder Then we are done here
-If bgfile$="" Then Exit 
-Forever
+	bgdir=ReadDir(startdir$+"\bgs\")
+	bgnum = 0
+	Repeat
+		bgfile$=NextFile$(bgdir)
+		bgfile$ = Lower(bgfile$)
+		If Instr(bgfile$,".png",1) <> 0 And Instr(bgfile$,"_thumb",1) = 0 Then
+			b:bga = New bga
+			
+			b.bgnum = bgnum
+			bgnum = bgnum + 1
+			'do i really need to load the music and stage large files now?
+			b.sbgpath$ = startdir$+"\bgs\"+bgfile$
+			'b.bg = LoadImage(startdir$+"\bgs\"+bgfile$,0)
+			
+			
+			If FileType(startdir$+"\music\"+Replace(bgfile$,".png",".ogg")) <> 0 Then 
+				b.bgmusicpath$ = startdir$+"\music\"+Replace(bgfile$,".png",".ogg")
+			'b.bgmusic = LoadSound(startdir$+"\music\"+Replace(bgfile$,".png",".ogg"),True)
+			Else
+				b.bgmusicpath$ = startdir$+"\music\ryu.ogg"
+			'b.bgmusic = LoadSound(startdir$+"\music\ryu.ogg",True)
+			EndIf
+			'lets take out the .png To use the file as the name of the background
+			DebugLog "Made file from "+bgfile$
+			b.bgname$ = Replace(bgfile$,".png","")
+			b.thumbgpath$ = b.bgname$+"_thumb.png"
+			Cls
+			SetScale( 2,2 )
+			SetImageFont(fntArialA)
+			DrawImage mainload,0,0
+			'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
+			DrawText "Loading: Stages "+bgfile$,0,0
+			'a debug code
+			'If maindebug = True Then 
+			'Print startdir$+"\sprites\"+tempfile$
+			Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
+			SetScale( 1,1 )		
+		EndIf
+		
+		
+
+		'If we run out of files in the bg folder Then we are done here
+		If bgfile$="" Then Exit 
+	Forever
 
 
 End Function

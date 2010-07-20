@@ -64,6 +64,9 @@ HideMouse
 getimpacts()
 getselectionfighters()
 getbgs()
+
+
+
 SetImageFont fntArialD
 SetBlend(LIGHTBLEND)
 SetBlend(ALPHABLEND)
@@ -72,9 +75,9 @@ Global mainmmenu = createmainmenu()
 ' Your main screen draw loop 
 SetScale( 2,2) 
 
-
+Global FPSTIMER:TTIMER = CreateTimer(30) 
 While Not KeyHit(KEY_F12)
-Delay 3
+WaitTimer(FPSTIMER)
 '	Repeat
 '	elapsed=MilliSecs()-time
 '	Until elapsed
