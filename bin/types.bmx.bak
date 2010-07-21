@@ -163,7 +163,7 @@ Type bga Extends TBBType
 	End Method
 
 
-Field x,y,bg,bgnum,bgname$,sbg,thumbimg,thumbgpath$,bgmusic
+Field x,y,bg,bgnum,bgname$,sbg,sbgpath$,thumbimg,thumbgpath$,bgmusic,bgmusicpath$
 
 End Type
 

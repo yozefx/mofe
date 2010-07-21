@@ -1224,7 +1224,12 @@ Function menuevents$()
 			selfight = getselectedmenuitem(stageselmenu)
 			For b:bga = EachIn bga_list
 				If b.bgnum = selfight Then
+					If b.bg = Null Then b.bg = LoadImage(b.sbgpath$)
 					CURRENTSTAGE = b.bg
+					If b.bgmusic = Null Then 
+						DebugLog "Loading sound: "+b.bgmusicpath$
+						b.bgmusic = LoadSound(b.bgmusicpath$,True)
+					EndIf
 					BGMUSIC = b.bgmusic
 				EndIf
 			Next
