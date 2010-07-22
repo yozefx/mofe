@@ -180,9 +180,12 @@ End Function
 
 Function fightingengine()
 
+SetOrigin(ENGINEOFFSET,0)
 drawbg()
 controlfighters()
+SetOrigin(ENGINEOFFSET,0)
 controlimpacts()
+SetOrigin(0,0)
 enginemode()
 
 
@@ -210,12 +213,17 @@ Function controlfighters()
 For p:player = EachIn player_list
 
 If p.playertype$ <> "" Then
-
+controloffset()
+SetOrigin(ENGINEOFFSET#,0)
+If ENGINESTATUS$ <> "NETWAIT" Then
 fightingmode(p:player)
 drawfighter(p:player)
 controlfballs(p:player)
+EndIf
+SetOrigin(0,0)
 drawlifebars(p:player)
 drawebars(p:player)
+drawvics()
 EndIf
 
 Next
@@ -228,13 +236,31 @@ Function enginemode()
 
 Select ENGINESTATUS$
 
+Case "NETWAIT"
+If checkstartnetfight() = True Then
+ENGINESTATUS$ = "INIT"
+Else
+Cls
+DrawImage mainload,0,0
+
+DrawText "Waiting for other players....",0,0
+
+
+Flip
+
+EndIf
+
 Case "INIT"
 'start music playback
+MUSICCHANNEL = PlaySound(BGMUSIC)
 ENGINESTATUS$ = "RESET"
 
 Case "RESET"
 ENGINESCALE# = 2
+OLDMAXL = 0
+OLDMAXR = 640
 ENGINESTATUS$ = "INTRO"
+
 
 Case "INTRO"
 splashround(CURRENTRND)
@@ -249,7 +275,7 @@ Case "SPECIAL"
 
 Case "ENDGAME"
 splashfinal()
-
+StopChannel MUSICCHANNEL
 End Select
 
 End Function
@@ -277,7 +303,18 @@ Case "RESET"
 	p.lost = False
 	p.fmode$ = "fintro"
 	p.char.fanim$ = "intro"	
+	Default
+	p.x = Rnd(GraphicsWidth()/6,(GraphicsWidth()/6)*5)
+	p.lost = False
+	p.fmode$ = "fintro"
+	p.char.fanim$ = "intro"	
 	End Select
+	ENGINEOFFSET# = 0
+
+
+
+
+	
 'ENGINESTATUS$ = "INTRO"
 
 Case "INTRO"
@@ -286,25 +323,61 @@ Case "INTRO"
 	p.fmode$ = "fight"
 	p.char.fanim$ = "stand"
 	EndIf
-turnfighter(p:player)
+	turnfighter(p:player)
 
 
 Case "OUTRO"
+Select p.playertype$
+
+Case "HUMAN"
 playercontrol(p:player)
+
+Case "COMP"
+fighterai(p:player)
+
+Case "NET"
+netplayercontrol(p:player)
+
+End Select
 turnfighter(p:player)
 
 Case "FIGHT"
+Select p.playertype$
+
+Case "HUMAN"
 playercontrol(p:player)
+
+Case "COMP"
+fighterai(p:player)
+
+Case "NET"
+netplayercontrol(p:player)
+End Select
+
 turnfighter(p:player)
 
 
 Case "SPECIAL"
+Select p.playertype$
+
+Case "HUMAN"
 playercontrol(p:player)
+
+Case "COMP"
+fighterai(p:player)
+
+Case "NET"
+netplayercontrol(p:player)
+End Select
+
 turnfighter(p:player)
 
 
 Case "PAUSE"
 
+Case "ENDGAME"
+
+Case "NETWAIT"
 
 End Select
 
@@ -314,6 +387,9 @@ End Function
 
 Function turnfighter(p:player)
 'we are gonna find our fighters opponent
+Select GAMEENGINETYPE$
+
+Case "Arcade"
 For opponent:player = EachIn player_list
 	If opponent.team <> p.team Then
 	'lets get our opponents position
@@ -333,66 +409,78 @@ For opponent:player = EachIn player_list
 	
 	EndIf
 Next
+
+Case "Brawl"
+ppppp = 0
+
+End Select
+
+
 End Function
 
 
 
 Function drawfighter(p:player)
-For a:animdata = EachIn animdata_list
-	If a.fanim$ = p.char.fanim$ And a.fid$ = p.char.fid$ Then
-	
-	If ENGINESTATUS$ <> "SPECIAL" Then
-	a.tfrate = a.tfrate + 1
-	SLOMO = 0
-	Else
-	SLOMO = SLOMO + 1
-	If SLOMO >= 3 Then
-	a.tfrate = a.tfrate + 1
-	SLOMO = 0
-	
-	EndIf
-	EndIf
-	
-	
-	
-	If a.tfrate >= a.frate Then
-	a.tframe = a.tframe + 1
-	a.tfrate = 0
-	EndIf
-	
-	If a.tframe = a.fhitf Then
-	'run hit frame function here
-	hitf(p:player,a:animdata)
-	EndIf
-	
-	
-	If a.tframe > a.nof Then
-		If p.lost = True Or p.char.fstatus$ = "outro" Then
-		ENGINESTATUS$ = "OUTRO"
-		pframe = a.tframe-1
+For a:animdata = EachIn p.char.anim_list
+	If a.fanim$ = p.char.fanim$ Then
+		'If ENGINESTATUS$ = "OUTRO" Then
+		'If p.lost = False Then
+		'p.char.fstatus$ = "outro"
+		'p.char.fanim$ = "outro"
+		'EndIf
+		'EndIf
+		If ENGINESTATUS$ <> "SPECIAL" Then
+			a.tfrate = a.tfrate + 1
+			SLOMO = 0
+		Else
+			SLOMO = SLOMO + 1
+			If SLOMO >= 3 Then
+				a.tfrate = a.tfrate + 1
+				SLOMO = 0
+			
+			EndIf
 		EndIf
-	a.tframe = 1
-	If ENGINESTATUS$ = "OUTRO" Then a.tframe = pframe
-	'If the animation was an intro Then finish the intro
-		If p.fmode$ = "fintro" Then
-		p.introfin = 1
-		p.fmode$ = "fight"
+	
+	
+	
+		If a.tfrate >= a.frate Then
+			a.tframe = a.tframe + 1
+			a.tfrate = 0
 		EndIf
-
+	
+		If a.tframe = a.fhitf Then
+			'run hit frame function here
+			hitf(p:player,a:animdata)
+		EndIf
+	
+	
+		If a.tframe >= a.nof Then
+			If p.lost = True Or p.char.fstatus$ = "outro" Then
+				ENGINESTATUS$ = "OUTRO"
+				pframe = a.tframe-1
+			EndIf
+			a.tframe = 1
+			If ENGINESTATUS$ = "OUTRO" Then a.tframe = pframe
+		'If the animation was an intro Then finish the intro
+			If p.fmode$ = "fintro" Then
+				p.introfin = 1
+				p.fmode$ = "fight"
+			EndIf
+	
+			
+			p.char.fanimating = False
+			p.char.dashing = False
+			p.spectag = False
+			p.char.spectag = False
+			'If the player lost. play the outro after his KO frames are done
+	
+			p.char.hurt = False
+		EndIf
 		
-	p.char.fanimating = False
-	p.char.dashing = False
-	p.spectag = False
-	p.char.spectag = False
-	'If the player lost. play the outro after his KO frames are done
-
-	p.char.hurt = False
-	EndIf
-	
-	displayfighterframe(p:player,a:animdata)
-	If p.fmode$ = "special" Then
-	drawspecialstart(p:player,a:animdata)
-	EndIf
+		displayfighterframe(p:player,a:animdata)
+		If p.fmode$ = "special" Then
+			drawspecialstart(p:player,a:animdata)
+		EndIf
 	
 	EndIf
 Next
@@ -663,7 +751,13 @@ Function controlfballs(p:player)
 
 End Function
 
+
+'fucking yuck this whole lot needs to be changed.
+'should use arrays its faster
+
 Function displayfighterframe(p:player,a:animdata)
+
+Rem
 For g:frame = EachIn frame_list
 	If g.fid$ = p.char.fid$ And g.fanim$ = a.fanim$ Then
 	
@@ -682,35 +776,37 @@ For g:frame = EachIn frame_list
 		hitcollbox(coll:collbox,p:player,a:animdata)
 		Next
 		
-		fighterdir(p:player,g:frame,a:animdata)
+		
 		
 		EndIf
 	
 	EndIf
 Next
+End Rem
+fighterdir(p:player,Null,a:animdata)
 End Function
 
 
 
 Function fighterdir(p:player,g:frame,a:animdata)
-a.fwidth = ImageWidth(g.fframe)
-a.fheight = ImageHeight(g.fframe)
+a.fwidth = ImageWidth(a.frames[a.tframe])
+a.fheight = ImageHeight(a.frames[a.tframe])
 p.halign = a.halign
 
-If p.fmode$ = "special" Then SPECIALFRAME = g.fframe
+If p.fmode$ = "special" Then SPECIALFRAME = a.frames[a.tframe-1]
 If p.direction = 0 Then
 p.tx = p.x-(a.halign*ENGINESCALE#)
-p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(g.fframe)*ENGINESCALE#)+p.y
+p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(a.frames[a.tframe])*ENGINESCALE#)+p.y
 'DrawImage pshadows,p.x,240-ImageHeight(pshadows)/4
 
 SetScale(ENGINESCALE#,-(ENGINESCALE#/4))
 SetColor(0,0,0)
 SetAlpha(0.5)
-DrawImage g.fframe,p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(g.fframe)*ENGINESCALE#)/4)
+DrawImage a.frames[a.tframe],p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(a.frames[a.tframe])*ENGINESCALE#)/4)
 SetScale(ENGINESCALE#,ENGINESCALE#)
 SetColor(255,255,255)
 SetAlpha(1)
-DrawImage g.fframe,p.tx,p.ty
+DrawImage a.frames[a.tframe],p.tx,p.ty
 SPECFX = p.tx
 SPECFY = p.ty
 
@@ -720,19 +816,19 @@ EndIf
 
 If p.direction = 1 Then
 p.tx = p.x+a.halign*ENGINESCALE#
-p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(g.fframe)*ENGINESCALE#)+p.y
+p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(a.frames[a.tframe])*ENGINESCALE#)+p.y
 'DrawImage pshadows,p.x,240-ImageHeight(pshadows)/4
 SetScale(-ENGINESCALE#,-(ENGINESCALE#/4))
 SetColor(0,0,0)
 SetAlpha(0.5)
-DrawImage g.fframe,p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(g.fframe)*ENGINESCALE#)/4)
+DrawImage a.frames[a.tframe],p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(a.frames[a.tframe])*ENGINESCALE#)/4)
 SetScale(ENGINESCALE#,ENGINESCALE#)
 SetColor(255,255,255)
 SetAlpha(1)
 
 
 SetScale(-ENGINESCALE#,ENGINESCALE#)
-DrawImage g.fframe,p.tx,p.ty
+DrawImage a.frames[a.tframe],p.tx,p.ty
 SetScale(ENGINESCALE#,ENGINESCALE#)
 SPECFX = p.tx
 SPECFY = p.ty
@@ -749,12 +845,31 @@ End Function
 Function playercontrol(p:player)
 p.oldpx = p.x
 
+Select GAMEENGINETYPE$
+
+Case "Brawl"
 Select p.direction
 Case 0
 If p.x <= 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2 Then p.x = 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2
+If p.x >= 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#) Then p.x = 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)
+
+Case 1
+If p.x >= 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#) Then p.x = 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)
+If p.x <= 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2 Then p.x = 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2
+
+
+End Select
+
+Case "Arcade"
+Select p.direction
+Case 0
+If p.x <= 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2 Then p.x = 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2
+
 Case 1
 If p.x >= 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#) Then p.x = 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)
 
+
+End Select
 
 End Select
 
@@ -765,11 +880,12 @@ p.char.fanim$ = "lose"
 'ENGINESTATUS$ = "OUTRO"
 p.char.fanimating = True
 p.lost = True
+
 EndIf
 
 
-If p.char.fstatus$ <> "jump" Then
-p.y = (p.y + p.char.spd * 3)*ENGINESCALE#
+If p.char.fstatus$ <> "jump"  Or p.char.jup = False Then
+p.y = p.y + ((p.char.spd * 3)*ENGINESCALE#)
 If p.y > 0 Then
 p.y = 0
 EndIf
@@ -995,6 +1111,8 @@ EndIf
 
 
 If checkkeydowntype(p.team,"left") = True And p.char.fstatus$ <> "block" Then
+
+
 Select p.direction
 
 Case 0
@@ -1014,6 +1132,15 @@ p.bmtimer = True
 p.char.fstatus$ = "walk"
 p.char.fanim$ = "walk"
 EndIf
+
+End Select
+Select GAMEENGINETYPE$
+
+Case "Arcade"
+pppppp = 0
+
+Case "Brawl"
+p.direction = 1
 
 End Select
 If p.char.fanimating = False Then
@@ -1050,6 +1177,16 @@ p.char.fanim$ = "walk"
 EndIf
 
 End Select
+Select GAMEENGINETYPE$
+
+Case "Arcade"
+pppppp = 0
+
+Case "Brawl"
+p.direction = 0
+
+End Select
+
 If p.char.fanimating = False Then
 p.char.fanim$ = "walk"
 'If p.x < 640 Then
@@ -1064,7 +1201,7 @@ EndIf
 
 
 
-If checkkeydowntype(p.team,"down") = True And checkkeydowntype(p.team,"wp") = True And checkkeydowntype(p.team,"wk") = True And p.etype = 0 And p.char.hurt = False Then
+If checkkeydowntype(p.team,"down") = True And checkkeydowntype(p.team,"wp") = True And checkkeydowntype(p.team,"wk") = True And p.etype = 0 And p.char.hurt = False And p.char.fstatus$ <> "jump" Then
 'If p.bkeydwn = False Then
 'p.movestring$ = p.movestring$ + "+%d"
 p.char.ctime = p.char.ctime + p.char.spd
@@ -1238,21 +1375,85 @@ p.movestring$ = ""
 EndIf
 EndIf
 
+
+
+If GAMEENGINETYPE$="Arcade" Then
 Select p.direction
 Case 0
 If p.char.fstatus$ <> "jump" Then
 If p.x >= p.oppx Then p.x = p.oldpx
 EndIf
+If p.oppx-p.x > 640 Then p.x = p.oldpx
 
 Case 1
 If p.char.fstatus$ <> "jump" Then
 If p.x <= p.oppx Then p.x = p.oldpx
 EndIf
+If p.oppx-p.x < -640 Then p.x = p.oldpx
+
+
 
 End Select
+EndIf
+
+If GNETSUCCESS <> 0 Then
+transmitplayer(p:player)
+EndIf
+
 
 End Function
 
+
+
+Function controloffset()
+ISOFFSET = False
+
+If GAMEENGINETYPE$="Arcade" Then
+For p:player = EachIn player_list
+If p.x < PXMAXXL Then PXMAXXL = p.x
+If p.x > PXMAXXR Then PXMAXXR = p.x
+
+Next
+If PXMAXXL < OLDMAXL Then
+ENGINEOFFSET# = Float(0 - PXMAXXL)
+OLDMAXL = PXMAXXL
+OLDMAXR = PXMAXXR
+EndIf
+If PXMAXXR > OLDMAXR Then
+ENGINEOFFSET# = Float(640 - PXMAXXR)
+OLDMAXL = PXMAXXL
+OLDMAXR = PXMAXXR
+EndIf
+EndIf
+If GAMEENGINETYPE$="Brawl" Then
+For p:player = EachIn player_list
+If p.team = 1 Then
+If p.x < PXMAXXL Then PXMAXXL = p.x
+If p.x > PXMAXXR Then PXMAXXR = p.x
+
+
+
+EndIf
+Next
+If PXMAXXL < OLDMAXL Then
+ENGINEOFFSET# = Float(0 - PXMAXXL)
+OLDMAXL = PXMAXXL
+OLDMAXR = PXMAXXR
+EndIf
+If PXMAXXR > OLDMAXR Then
+ENGINEOFFSET# = Float(640 - PXMAXXR)
+OLDMAXL = PXMAXXL
+OLDMAXR = PXMAXXR
+EndIf
+
+EndIf
+
+'If p.x > 0 And p.x < 640 And ISOFFSET = False Then
+'ENGINEOFFSET# = 0
+'EndIf
+
+'Next
+End Function
 
 
 Function jumpup(p:player)
@@ -2054,7 +2255,13 @@ For p:player = EachIn player_list
 p.char.Remove()
 p.Remove()
 Next
+For vic:victory = EachIn victory_list
+vic.Remove()
+Next
+OLDMAXL = 0
+OLDMAXR = 640
 ENGINESTATUS$ = ""
+If GNETSUCCESS = 0 Then
 fighterselmenu = createselectionscreen()
 allowp2menu(fighterselmenu)
 setmenufx(fighterselmenu,"Lightning",20,0,20,480)
@@ -2062,6 +2269,40 @@ setmenufx(fighterselmenu,"Lightning",610,0,610,480)
 
 setmenufx(fighterselmenu,"Lightning",120,0,120,480)
 setmenufx(fighterselmenu,"Lightning",510,0,510,480)
+Else
+Select HOSTJOIN
+
+Case 1
+
+deleteallmenus()
+chatmenu = createhostchatmenu()
+chatsayer = createchatsaymenu()
+chatmesslist = createchatlistmenu()
+
+Case 2
+deleteallmenus()
+chatmenu = createclientchatmenu()
+chatsayer = createchatsaymenu()
+chatmesslist = createchatlistmenu()
+
+Default
+fighterselmenu = createselectionscreen()
+allowp2menu(fighterselmenu)
+setmenufx(fighterselmenu,"Lightning",20,0,20,480)
+setmenufx(fighterselmenu,"Lightning",610,0,610,480)
+
+setmenufx(fighterselmenu,"Lightning",120,0,120,480)
+setmenufx(fighterselmenu,"Lightning",510,0,510,480)
+
+
+End Select
+
+
+
+
+EndIf
+
+
 
 End Select
 
@@ -2073,12 +2314,13 @@ End Function
 Function splashend()
 If SPLSHRNDSTART = False Then
 SPLSHRNDSTART = True
-SPLSHTIME = 20
+SPLSHTIME = 50
 SPLSHCURTIME = 0
 SLPSHSCALE# = 0
 SPLSHRNDPHASE = 0
 clearevents()
 PlaySound victsnd
+DebugLog "Play KO" 
 Else
 mevent = PollEvent()
 If mevent = EVENT_TIMERTICK And EventSource() = INOUTRND Then
@@ -2099,24 +2341,33 @@ SetScale(ENGINESCALE#,ENGINESCALE#)
 If SPLSHCURTIME >= SPLSHTIME Then 
 SPLSHRNDPHASE = 1
 SPLSHCURTIME = 0
-SPLSHTIME = 30
+SPLSHTIME = 40
+DebugLog "Played KO going to stat reset and victorys"
 'PlaySound fightsnd
 EndIf
 
 
+
+
 Case 1
 MOSTVICS = 0
-
+PERFECT = False
 For p:player = EachIn player_list
-p.fmode$ = "fstart"
-p.char.fstatus$ = "fstart"
-p.lost = False
+
 'For f.fight = Each fight
-If p.char.tmlife > 1 And p.char.fid$ = p.fid$ Then
+If p.lost = False And p.char.fid$ = p.fid$ Then
+Print "Character "+p.char.fid$+" cHP: "+p.char.tmlife+" mhp: "+p.char.mlife
+If p.char.tmlife = p.char.mlife Then 
+PERFECT = True
+Print "Character "+p.char.fid$+" cHP: "+p.char.tmlife+" mhp: "+p.char.mlife
+Print "PERFECT?"
+DebugLog "Got a perfect"
+EndIf
 p.vic = p.vic + 1
 If p.vic > MOSTVICS Then WINNER:player = p:player
 vic:victory = New victory
-Select  p.team
+
+Select p.team
 
 Case 1
 vic.y = 40*ENGINESCALE#
@@ -2141,19 +2392,92 @@ End Select
 EndIf
 
 'For f.fight = Each fight
-p.char.tmlife = p.char.mlife
-p.char.dtaken = 0
-p.char.plife# = Float(p.char.tmlife) / Float(p.char.mlife) * 236
-p.char.tftaken# = 0
+DebugLog "RESETING STATS"
+
 'Next
 
 Next
-If CURRENTRND = MAINGAMEROUNDS-1 Then
-ENGINESTATUS$ = "ENDGAME"
+p1vicss=0
+p2vicss=0
+For p:player = EachIn player_list
+If p.team = 1 Then
+p1vicss = p.vic
+EndIf
+If p.team = 2 Then
+p2vicss = p.vic
+EndIf
+
+Next
+
+If PERFECT = False Then
+DebugLog "NO PERFECT"
+
+SPLSHRNDPHASE = 3
+SPLSHCURTIME = 0
+SLPSHSCALE# = 0
+SPLSHTIME = 40
+clearevents()
 Else
+DebugLog "YES PERFECT"
+SPLSHRNDPHASE = 2
+SPLSHCURTIME = 0
+SLPSHSCALE# = 0
+SPLSHTIME = 40
+clearevents()
+PlaySound perfectsnd
+PERFECT = False
+DebugLog "GOING TO PERFECT DISPLAY"
+EndIf
+
+Case 2
+SLPSHSCALE# = ((Float(SPLSHCURTIME)/Float(SPLSHTIME))*4)
+'SLPSHSCALE# = SLPSHSCALE# + 0.001
+'If SLPSHSCALE# >= 2 Then SLPSHSCALE# = 2
+SetScale(SLPSHSCALE#,SLPSHSCALE#)
+DrawImage perfectim,GraphicsWidth()/2,GraphicsHeight()/2
+SetScale(ENGINESCALE#,ENGINESCALE#)
+If SPLSHCURTIME >= SPLSHTIME Then 
+DebugLog "Done Drawing Perfect go to End Splash"
+SPLSHRNDPHASE = 3
+SPLSHCURTIME = 0
+SPLSHTIME = 30
+PERFECT = False
+'PlaySound fightsnd
+EndIf
+
+
+Case 3
+
+
+If CURRENTRND >= MAINGAMEROUNDS-1 And p1vicss <> p2vicss Then
+DebugLog "End Game"
+SPLSHRNDSTART = False
+ENGINESTATUS$ = "ENDGAME"
+For p:player = EachIn player_list
+	p.char.tmlife = p.char.mlife
+	p.char.dtaken = 0
+	p.char.plife# = Float(p.char.tmlife) / Float(p.char.mlife) * 236
+	p.char.tftaken# = 0
+	p.lost = False
+	p.char.fstatus$ = ""
+Next
+SPLSHRNDPHASE = 0
+Else
+DebugLog "GO TO NEXT ROUND "+CURRENTRND+1
 CURRENTRND = CURRENTRND + 1
 SPLSHRNDSTART = False
+For p:player = EachIn player_list
+	p.char.tmlife = p.char.mlife
+	p.char.dtaken = 0
+	p.char.plife# = Float(p.char.tmlife) / Float(p.char.mlife) * 236
+	p.char.tftaken# = 0
+	p.lost = False
+	p.char.fstatus$ = ""
+Next
 ENGINESTATUS$ = "RESET"
+SPLSHRNDPHASE = 0
+
+DebugLog "set status to reset"
 EndIf
 
 End Select
@@ -2213,7 +2537,7 @@ EndIf
 Case 2
 SPLSHRNDSTART = False
 ENGINESTATUS$ = "FIGHT"
-
+SPLSHRNDPHASE = 0
 End Select
 
 EndIf
@@ -2309,36 +2633,36 @@ Select p.etype
 
 Case 0
 SetColor p.char.energy,p.char.energy,255
-DrawRect 18,480-14,Float((p.char.energy)/175)*82,4
-
+DrawRect 18,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 Case 1
 SetColor 255,p.char.energy,p.char.energy
-DrawRect 18,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 18,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 
 Case 2
 SetColor 255,p.char.energy,0
-DrawRect 18,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 18,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 
 Case 3
 If p.char.plife# >= 60 Then
 SetColor 155,155,155
-DrawRect 18,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 18,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 p.char.energy = 0
 Else
 SetColor Rnd(1,255),Rnd(1,255),Rnd(1,255)
-DrawRect 18,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 18,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 p.char.energy = 175
 EndIf
 
 
 Case 4
 SetColor 255,p.char.energy,0
-DrawRect 18,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 18,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 
 
 End Select
 SetColor(255,255,255)
 DrawImage ebar[p.etype],0,480-22
+If p.char.energy = 175 Then blitzmalen(18,480-14,Float(18)+((Float(Float(p.char.energy)/Float(175))*Float(82))*2),480-14)
 
 
 Case 2
@@ -2347,39 +2671,546 @@ Select p.etype
 
 Case 0
 SetColor p.char.energy,p.char.energy,255
-DrawRect 622,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 622,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 
 Case 1
 'DrawImage ebaro,320-ImageWidth(ebaro),240-22
 SetColor 255,p.char.energy,p.char.energy
-DrawRect 622,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 622,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 
 
 Case 2
 SetColor 255,p.char.energy,0
-DrawRect 622,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 622,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 
 Case 3
 If p.char.plife# >= 60 Then
 SetColor 155,155,155
-DrawRect 622,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 622,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 p.char.energy = 0
 Else
 SetColor Rnd(1,255),Rnd(1,255),Rnd(1,255)
-DrawRect 622,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 622,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 p.char.energy = 175
 EndIf
 
 Case 4
 SetColor 255,p.char.energy,0
-DrawRect 622,480-14,Float((p.char.energy)/175)*82,4
+DrawRect 622,480-14,Float(Float(p.char.energy)/Float(175))*Float(82),4
 
 
 End Select
 SetColor(255,255,255)
 DrawImage ebar[p.etype],640,480-22
 SetScale(ENGINESCALE#,ENGINESCALE#)
+If p.char.energy = 175 Then blitzmalen(Float(622)-((Float(Float(p.char.energy)/Float(175))*Float(82))*2),480-14,Float(622),480-14)
 
 End Select
 
+End Function
+
+
+
+
+
+
+
+Function drawvics()
+For vic:victory = EachIn victory_list
+If vic.fid$ <> "" Then
+DrawImage vic.vicim,vic.x,vic.y
+EndIf
+Next
+End Function
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Function fighterai(p:player)
+
+p.oldpx = p.x
+Select p.direction
+Case 0
+If p.x <= 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2 Then p.x = 0-(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2
+Case 1
+If p.x >= 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#) Then p.x = 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)
+
+
+End Select
+
+'If p\x <= 0 Then p\x = 0
+'If p\x >= 320 Then p\x = 320
+
+
+If p.char.tmlife <= 0 Then
+p.fmode$ = "lose"
+p.char.fanim$ = "lose"
+'ENGINESTATUS$ = "OUTRO"
+p.char.fanimating = True
+p.lost = True
+EndIf
+
+
+If p.char.fstatus$ <> "jump" Then
+p.y = p.y + ((p.char.spd * 3)*ENGINESCALE#)
+If p.y > 0 Then
+p.y = 0
+EndIf
+EndIf
+
+
+If p.char.hurt = True Then
+Select p.direction
+
+Case 0
+p.x = p.x - 1
+If p.x+p.halign*ENGINESCALE# <= 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2) Then p.x = 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)
+Case 1
+p.x = p.x + 1
+If p.x-p.halign*ENGINESCALE# >= 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#) Then p.x = 0-((ImageWidth(CURRENTSTAGE)*ENGINESCALE#)/2)+(ImageWidth(CURRENTSTAGE)*ENGINESCALE#)
+
+End Select
+EndIf
+
+
+If p.char.jup = False Then
+p.y = p.y + ((p.char.spd * 3)*ENGINESCALE#)
+If p.y > 0 Then
+p.y = 0
+EndIf
+EndIf
+
+
+
+
+If p.desctime > 0 Then 
+p.desctime = p.desctime - 1
+EndIf
+
+If p.desctime <= 0 And p.char.fanimating = False Then
+
+If p.closeup = False Then
+p.descrnd = Rand(1,7)
+Else
+p.descrnd = Rand(7,14)
+EndIf
+
+
+Select p.descrnd
+
+Case 1
+p.bmtimer = True
+p.char.fstatus$ = "walk"
+p.char.fanim$ = "walk"
+p.char.fanimating = True
+p.desctime = Rand(20,120)
+p.descdir = Rand(0,1)
+If p.tx >= 640 Then 
+p.descdir = 0
+If GAMEENGINETYPE$="Brawl" Then
+p.direction = 1
+EndIf
+EndIf
+If p.tx <= 0 Then
+p.descdir = 1
+If GAMEENGINETYPE$="Brawl" Then
+p.direction = 0
+EndIf
+
+EndIf
+Case 2
+p.bmtimer = True
+p.char.fstatus$ = "stand"
+p.char.fanim$ = "stand"
+p.char.fanimating = True
+p.desctime = Rand(10,20)
+
+Case 3
+p.bmtimer = True
+p.char.fanim$ = "crouch"
+p.char.fstatus$ = "crouch"
+p.char.fanimating = True
+p.desctime = Rand(20,60)
+
+Case 4
+p.descdir = Rand(0,2)
+
+p.char.fstatus$ = "jump"
+p.char.fanim$ = "jump"
+
+p.bmtimer = True
+p.char.jumpheight = 0
+p.char.jup = True
+p.char.fanimating = True
+
+Case 5
+If p.char.fstatus$ <> "jump" Then
+If p.etype = 0 Then
+p.desctime = Rand(5,60)
+p.char.fanimating = True
+p.bmtimer = True
+p.char.fanim$ = "powerup"
+p.char.fstatus$ = "powerup"
+EndIf
+EndIf 
+
+Select p.descdir
+Case 0
+p.char.jtype$ = "up"
+Case 1
+If p.tx >= 640 Then 
+p.char.jtype$ = "lup"
+Else
+p.char.jtype$ = "rup"
+EndIf
+Case 2
+If p.tx <= 0 Then 
+p.char.jtype$ = "rup"
+Else
+p.char.jtype$ = "lup"
+EndIf
+End Select
+
+
+Case 6
+
+If p.etype = 2 Then
+p.char.energy = p.char.energy + 20
+If p.char.energy >= 175 Then p.char.energy = 175
+EndIf
+If p.char.energy >= 45 Then
+If p.char.firebx$ <> "" Then
+p.char.fstatus$ = "firebx"
+p.char.fanim$ = "firebx"
+p.fmode$ = "special"
+ENGINESTATUS$ = "SPECIAL"
+p.getbgs = True
+p.char.energy = p.char.energy - 45
+EndIf
+Else
+If p.char.fireb$ <> "" Then
+p.char.fstatus$ = "fireb"
+p.char.fanim$ = "fireb"
+EndIf
+EndIf
+p.bmtimer = True
+p.char.fanimating = True
+p.char.bfball = True
+
+
+Case 7
+
+If p.etype = 2 Then
+p.char.energy = p.char.energy + 20
+If p.char.energy >= 175 Then p.char.energy = 175
+EndIf
+If p.char.energy >= 45 Then
+If p.char.dashx$ <> "" Then
+p.char.fstatus$ = "dashx"
+p.char.fanim$ = "dashx"
+p.fmode$ = "special"
+ENGINESTATUS$ = "SPECIAL"
+p.getbgs = True
+p.char.energy = p.char.energy - 45
+EndIf
+Else
+If p.char.dash$ <> "" Then
+p.char.fstatus$ = "dash"
+p.char.fanim$ = "dash"
+EndIf
+EndIf
+p.char.dashing = True
+p.bmtimer = True
+p.char.fanimating = True
+
+
+Case 8
+
+If p.etype = 2 Then
+p.char.energy = p.char.energy + 20
+If p.char.energy >= 175 Then p.char.energy = 175
+EndIf
+If p.char.energy >= 45 Then
+If p.char.specx$ <> "" Then
+p.char.fstatus$ = "specialx"
+p.char.fanim$ = "specialx"
+p.fmode$ = "special"
+ENGINESTATUS$ = "SPECIAL"
+p.getbgs = True
+p.char.energy = p.char.energy - 45
+EndIf
+Else
+If p.char.spec$ <> "" Then
+p.char.fstatus$ = "special"
+p.char.fanim$ = "special"
+EndIf
+EndIf
+p.char.dashing = True
+p.bmtimer = True
+p.char.fanimating = True
+
+
+Case 9
+p.bmtimer = True
+If p.char.fstatus$ = "jump" Then
+p.char.fstatus$ = "apunch"
+p.char.fanim$ = "apunch"
+Else
+p.char.fstatus$ = "wpunch"
+p.char.fanim$ = "wpunch"
+EndIf
+p.char.fanimating = True
+p.closeup = False
+Case 10
+p.bmtimer = True
+If p.char.fstatus$ = "jump" Then
+p.char.fstatus$ = "apunch"
+p.char.fanim$ = "apunch"
+Else
+p.char.fstatus$ = "spunch"
+p.char.fanim$ = "spunch"
+EndIf
+p.char.fanimating = True
+p.closeup = False
+Case 11
+p.bmtimer = True
+If p.char.fstatus$ = "jump" Then
+p.char.fstatus$ = "akick"
+p.char.fanim$ = "akick"
+Else
+p.char.fstatus$ = "wkick"
+p.char.fanim$ = "wkick"
+EndIf
+p.char.fanimating = True
+p.closeup = False
+Case 12
+p.bmtimer = True
+If p.char.fstatus$ = "jump" Then
+p.char.fstatus$ = "akick"
+p.char.fanim$ = "akick"
+Else
+p.char.fstatus$ = "skick"
+p.char.fanim$ = "skick"
+EndIf
+p.char.fanimating = True
+p.closeup = False
+Case 13
+p.bmtimer = True
+p.char.fstatus$ = "ckick"
+p.char.fanim$ = "ckick"
+p.char.fanimating = True
+p.closeup = False
+Case 14
+p.bmtimer = True
+p.char.fstatus$ = "cpunch"
+p.char.fanim$ = "cpunch"
+p.char.fanimating = True
+p.closeup = False
+End Select
+
+EndIf
+
+
+Select p.char.fstatus$
+
+Case "jump"
+If p.char.jup = True Then
+jumpup(p:player)
+EndIf
+
+
+Case "powerup"
+p.char.ctime = p.char.ctime + p.char.spd
+If p.char.ctime >= 50 Then
+p.char.energy = p.char.energy + p.char.spr
+p.char.ctime = 0
+EndIf
+If p.char.energy >= 175 Then p.char.energy = 175
+
+Case "walk"
+Select p.direction
+
+Case 0
+p.char.fanim$ = "walk"
+
+If p.descdir = 0 Then
+
+If Not p.tx >= 640 Then p.x = p.x + p.char.spd/2
+If p.tx >= p.oppx - 160 Then 
+p.char.fanimating = False 
+p.desctime = 0
+
+p.closeup = True
+Else
+p.closeup = False
+EndIf
+Else
+If Not p.tx <= 0 Then p.x = p.x - p.char.spd/2
+If p.tx <= 0 Then 
+p.desctime = 0
+
+EndIf
+EndIf
+Case 1
+p.char.fanim$ = "walk"
+If p.descdir = 0 Then
+If Not p.tx <= 0 Then p.x = p.x - p.char.spd/2
+If p.tx <= p.oppx + 160 Then 
+p.char.fanimating = False 
+p.desctime = 0
+
+p.closeup = True
+Else
+p.closeup = False
+EndIf
+
+Else
+If Not p.tx >= 640 Then p.x = p.x + p.char.spd/2
+If p.tx >= 640 Then 
+p.char.fanimating = False 
+p.desctime = 0
+
+EndIf
+EndIf
+End Select
+
+
+End Select
+
+
+Select p.direction
+
+Case 0
+If p.tx >= p.oppx - 160 Then 
+p.closeup = True
+Else
+p.closeup = False
+EndIf
+Case 1
+If p.tx <= p.oppx + 160 Then 
+p.closeup = True
+Else
+p.closeup = False
+EndIf
+End Select
+
+If p.char.dashing = True And p.char.fanimating = True Then
+Select p.direction
+
+Case 0
+p.x = p.x + p.char.spd
+
+Case 1
+p.x = p.x - p.char.spd
+
+End Select
+EndIf
+
+If p.char.tmlife > 0 And plose = True Then
+p.char.fstatus$ = "outro"
+p.char.fanim$ = "outro"
+p.char.fanimating = True
+EndIf
+
+If GAMEENGINETYPE$="Arcade" Then
+Select p.direction
+Case 0
+If p.char.fstatus$ <> "jump" Then
+If p.x >= p.oppx Then p.x = p.oldpx
+EndIf
+
+Case 1
+If p.char.fstatus$ <> "jump" Then
+If p.x <= p.oppx Then p.x = p.oldpx
+EndIf
+
+End Select
+EndIf
+End Function
+
+
+
+Function netplayercontrol(p:player)
+
+p.x = GetGNetInt( p.playerObj,NETPX )
+p.y = GetGNetInt( p.playerObj,NETPY )
+p.team = GetGNetInt( p.playerObj,NETPTEAM )
+p.playertype$ = "NET"
+p.char.tmlife = GetGNetInt( p.playerObj,NETTLIFE )
+p.char.plife# = GetGNetFloat( p.playerObj,NETPLIFE )
+p.char.mlife = GetGNetInt( p.playerObj,NETMLIFE )
+p.char.tmlife = GetGNetInt( p.playerObj,NETTMLIFE )
+p.char.fanimating = GetGNetInt( p.playerObj,NETPANIMB )
+p.char.energy =  GetGNetInt( p.playerObj,NETENERGY )
+p.fid$ = GetGNetString( p.playerObj,NETFID )
+p.char.fighternum =  GetGNetInt( p.playerObj,NETFITNUM )
+p.char.fname$ = GetGNetString( p.playerObj,NETFNAME )
+p.char.fanim$ = GetGNetString( p.playerObj,NETFANIM )
+p.direction = GetGNetInt( p.playerObj,NETDIR )
+p.char.fstatus$ = GetGNetString( p.playerObj,NETFSTATUS )
+p.char.jtype$ = GetGNetString( p.playerObj,NETJTYPE )
+p.char.hurt = GetGNetInt( p.playerObj,NETHURT )
+p.char.dtaken = GetGNetInt( p.playerObj,NETDTAKEN )
+p.char.tftaken# = GetGNetFloat( p.playerObj,NETFTAKEN )
+p.char.jumpheight = GetGNetInt( p.playerObj,NETJHEIGHT)
+p.char.jup = GetGNetInt( p.playerObj,NETJUP)
+p.char.dashing = GetGNetInt( p.playerObj,NETDASH)
+p.getbgs = GetGNetInt( p.playerObj,NETGETBGS)
+p.lost = GetGNetInt( p.playerObj,NETLOST)
+p.fmode$ = GetGNetString( p.playerObj,NETFMODE)
+
+p.char.jtype$ = GetGNetString( p.playerObj,NETJTYPE )
+p.etype = GetGNetInt( p.playerObj,NETETYPE)
+P1FSELREADY = GetGNetInt( p.playerObj,NETPREADY)
+p.netname$ = GetGNetString( p.playerObj,NETNAME )
+p.fightloaded = GetGNetInt( p.playerObj,NETFIGHTLOADED)
+
+
+End Function
+
+Function transmitplayer(p:player)
+  SetGNetInt( p.playerObj,NETPX,p.x )
+  SetGNetInt( p.playerObj,NETPY,p.y )
+  SetGNetInt( p.playerObj,NETPTEAM,p.team )
+
+  SetGNetInt( p.playerObj,NETTLIFE,p.char.tmlife )
+  SetGNetFloat( p.playerObj,NETPLIFE,p.char.plife# )
+  SetGNetInt( p.playerObj,NETMLIFE,p.char.mlife )
+ SetGNetInt( p.playerObj,NETTMLIFE,p.char.tmlife  )
+  SetGNetInt( p.playerObj,NETPANIMB,p.char.fanimating )
+   SetGNetInt( p.playerObj,NETENERGY,p.char.energy )
+  SetGNetString( p.playerObj,NETFID,p.fid$ )
+   SetGNetInt( p.playerObj,NETFITNUM,p.char.fighternum )
+  SetGNetString( p.playerObj,NETFNAME,p.char.fname$ )
+  SetGNetString( p.playerObj,NETFANIM,p.char.fanim$ )
+  SetGNetInt( p.playerObj,NETDIR,p.direction )
+  SetGNetString( p.playerObj,NETFSTATUS,p.char.fstatus$ )
+ SetGNetString( p.playerObj,NETJTYPE,p.char.jtype$  )
+  SetGNetInt( p.playerObj,NETHURT,p.char.hurt )
+  SetGNetInt( p.playerObj,NETDTAKEN,p.char.dtaken )
+  SetGNetFloat( p.playerObj,NETFTAKEN,p.char.tftaken# )
+  SetGNetInt( p.playerObj,NETJHEIGHT,p.char.jumpheight)
+  SetGNetInt( p.playerObj,NETJUP,p.char.jup)
+  SetGNetInt( p.playerObj,NETDASH,p.char.dashing)
+  SetGNetInt( p.playerObj,NETGETBGS,p.getbgs)
+  SetGNetString( p.playerObj,NETFMODE,p.fmode$)
+  SetGNetInt( p.playerObj,NETLOST,p.lost)
+
+  SetGNetString( p.playerObj,NETJTYPE,p.char.jtype$ )
+  SetGNetInt( p.playerObj,NETETYPE,p.etype)
+  'SetGNetInt( p.playerObj,NETPREADY,P1FSELREADY)
+  SetGNetString( p.playerObj,NETNAME,p.netname$ )
+  SetGNetInt( p.playerObj,NETFIGHTLOADED,1)
 End Function
