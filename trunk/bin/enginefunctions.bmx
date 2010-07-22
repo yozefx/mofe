@@ -421,66 +421,68 @@ End Function
 
 
 Function drawfighter(p:player)
-For a:animdata = EachIn animdata_list
-	If a.fanim$ = p.char.fanim$ And a.fid$ = p.char.fid$ Then
-	'If ENGINESTATUS$ = "OUTRO" Then
-	'If p.lost = False Then
-	'p.char.fstatus$ = "outro"
-	'p.char.fanim$ = "outro"
-	'EndIf
-	'EndIf
-	If ENGINESTATUS$ <> "SPECIAL" Then
-	a.tfrate = a.tfrate + 1
-	SLOMO = 0
-	Else
-	SLOMO = SLOMO + 1
-	If SLOMO >= 3 Then
-	a.tfrate = a.tfrate + 1
-	SLOMO = 0
-	
-	EndIf
-	EndIf
-	
-	
-	
-	If a.tfrate >= a.frate Then
-	a.tframe = a.tframe + 1
-	a.tfrate = 0
-	EndIf
-	
-	If a.tframe = a.fhitf Then
-	'run hit frame function here
-	hitf(p:player,a:animdata)
-	EndIf
-	
-	
-	If a.tframe > a.nof Then
-		If p.lost = True Or p.char.fstatus$ = "outro" Then
-		ENGINESTATUS$ = "OUTRO"
-		pframe = a.tframe-1
+For a:animdata = EachIn p.char.anim_list
+	If a.fanim$ = p.char.fanim$ Then
+		'If ENGINESTATUS$ = "OUTRO" Then
+		'If p.lost = False Then
+		'p.char.fstatus$ = "outro"
+		'p.char.fanim$ = "outro"
+		'EndIf
+		'EndIf
+		If ENGINESTATUS$ <> "SPECIAL" Then
+			a.tfrate = a.tfrate + 1
+			SLOMO = 0
+		Else
+			SLOMO = SLOMO + 1
+			If SLOMO >= 3 Then
+				a.tfrate = a.tfrate + 1
+				SLOMO = 0
+			
+			EndIf
 		EndIf
-	a.tframe = 1
-	If ENGINESTATUS$ = "OUTRO" Then a.tframe = pframe
-	'If the animation was an intro Then finish the intro
-		If p.fmode$ = "fintro" Then
-		p.introfin = 1
-		p.fmode$ = "fight"
+	
+	
+	
+		If a.tfrate >= a.frate Then
+			a.tframe = a.tframe + 1
+			a.tfrate = 0
 		EndIf
-
+	
+		If a.tframe = a.fhitf Then
+			'run hit frame function here
+			hitf(p:player,a:animdata)
+		EndIf
+	
+	
+		If a.tframe >= a.nof Then
+			If p.lost = True Or p.char.fstatus$ = "outro" Then
+				ENGINESTATUS$ = "OUTRO"
+				pframe = a.tframe-1
+			EndIf
+			a.tframe = 1
+			If ENGINESTATUS$ = "OUTRO" Then a.tframe = pframe
+		'If the animation was an intro Then finish the intro
+			If p.fmode$ = "fintro" Then
+				p.introfin = 1
+				p.fmode$ = "fight"
+			EndIf
+	
+			
+			p.char.fanimating = False
+			p.char.dashing = False
+			p.spectag = False
+			p.char.spectag = False
+			'If the player lost. play the outro after his KO frames are done
+	
+			p.char.hurt = False
+		EndIf
 		
-	p.char.fanimating = False
-	p.char.dashing = False
-	p.spectag = False
-	p.char.spectag = False
-	'If the player lost. play the outro after his KO frames are done
-
-	p.char.hurt = False
-	EndIf
-	
-	displayfighterframe(p:player,a:animdata)
-	If p.fmode$ = "special" Then
-	drawspecialstart(p:player,a:animdata)
-	EndIf
+		If a.tframe = 0 Then a.tframe = 1
+		
+		displayfighterframe(p:player,a:animdata)
+		If p.fmode$ = "special" Then
+			drawspecialstart(p:player,a:animdata)
+		EndIf
 	
 	EndIf
 Next
@@ -751,7 +753,13 @@ Function controlfballs(p:player)
 
 End Function
 
+
+'fucking yuck this whole lot needs to be changed.
+'should use arrays its faster
+
 Function displayfighterframe(p:player,a:animdata)
+
+Rem
 For g:frame = EachIn frame_list
 	If g.fid$ = p.char.fid$ And g.fanim$ = a.fanim$ Then
 	
@@ -765,40 +773,43 @@ For g:frame = EachIn frame_list
 			EndIf
 		
 		
-		For coll:collbox = EachIn collbox_list
-		'check for hit collisions at frame point
-		hitcollbox(coll:collbox,p:player,a:animdata)
-		Next
+
 		
-		fighterdir(p:player,g:frame,a:animdata)
+		
 		
 		EndIf
 	
 	EndIf
 Next
+End Rem
+		For coll:collbox = EachIn collbox_list
+			'check for hit collisions at frame point
+			hitcollbox(coll:collbox,p:player,a:animdata)
+		Next
+fighterdir(p:player,Null,a:animdata)
 End Function
 
 
 
 Function fighterdir(p:player,g:frame,a:animdata)
-a.fwidth = ImageWidth(g.fframe)
-a.fheight = ImageHeight(g.fframe)
+a.fwidth = ImageWidth(a.frames[a.tframe-1])
+a.fheight = ImageHeight(a.frames[a.tframe-1])
 p.halign = a.halign
 
-If p.fmode$ = "special" Then SPECIALFRAME = g.fframe
+If p.fmode$ = "special" Then SPECIALFRAME = a.frames[a.tframe-1]
 If p.direction = 0 Then
 p.tx = p.x-(a.halign*ENGINESCALE#)
-p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(g.fframe)*ENGINESCALE#)+p.y
+p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(a.frames[a.tframe-1])*ENGINESCALE#)+p.y
 'DrawImage pshadows,p.x,240-ImageHeight(pshadows)/4
 
 SetScale(ENGINESCALE#,-(ENGINESCALE#/4))
 SetColor(0,0,0)
 SetAlpha(0.5)
-DrawImage g.fframe,p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(g.fframe)*ENGINESCALE#)/4)
+DrawImage a.frames[a.tframe-1],p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(a.frames[a.tframe-1])*ENGINESCALE#)/4)
 SetScale(ENGINESCALE#,ENGINESCALE#)
 SetColor(255,255,255)
 SetAlpha(1)
-DrawImage g.fframe,p.tx,p.ty
+DrawImage a.frames[a.tframe-1],p.tx,p.ty
 SPECFX = p.tx
 SPECFY = p.ty
 
@@ -808,19 +819,19 @@ EndIf
 
 If p.direction = 1 Then
 p.tx = p.x+a.halign*ENGINESCALE#
-p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(g.fframe)*ENGINESCALE#)+p.y
+p.ty = (ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-(ImageHeight(a.frames[a.tframe-1])*ENGINESCALE#)+p.y
 'DrawImage pshadows,p.x,240-ImageHeight(pshadows)/4
 SetScale(-ENGINESCALE#,-(ENGINESCALE#/4))
 SetColor(0,0,0)
 SetAlpha(0.5)
-DrawImage g.fframe,p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(g.fframe)*ENGINESCALE#)/4)
+DrawImage a.frames[a.tframe-1],p.tx,((ImageHeight(CURRENTSTAGE)*ENGINESCALE#)-25)+((ImageHeight(a.frames[a.tframe-1])*ENGINESCALE#)/4)
 SetScale(ENGINESCALE#,ENGINESCALE#)
 SetColor(255,255,255)
 SetAlpha(1)
 
 
 SetScale(-ENGINESCALE#,ENGINESCALE#)
-DrawImage g.fframe,p.tx,p.ty
+DrawImage a.frames[a.tframe-1],p.tx,p.ty
 SetScale(ENGINESCALE#,ENGINESCALE#)
 SPECFX = p.tx
 SPECFY = p.ty

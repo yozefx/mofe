@@ -89,7 +89,7 @@ Type frame Extends TBBType
 	End Method
 
 
-Field fid$,fnum,fanim$,fframe,fighternum,fframe2
+Field fid$,fnum,fanim$,fframe:TImage,fighternum,fframe2:TImage
 
 
 End Type
@@ -137,7 +137,7 @@ Type player Extends TBBType
 	End Method
 
 
-Field colred,colgreen,colblue,teamnum,playernum,selectedfighter,fightername$,selx,sely,etype,Stream,pause,spoints,halign,playerObj:TGNetObject
+Field colred,colgreen,colblue,teamnum,playernum,selectedfighter,fightername$,selx,sely,etype,Stream:TStream,pause,spoints,halign,playerObj:TGNetObject
 Field playertype$,datafile$,team,direction,x,y,tx,ty,scrolly,scrollx,fmode$,introfin,movestring$,bkeydwn,mtimer,bmtimer,fid$,getbgs,fightloaded
 Field descrnd,descision$,desctime,desccd,descdir,oppx,ooldx,closeup,lost,vic,winner,netid,netname$,netplayer,spectag,oldpx,char:fight
 
@@ -163,7 +163,7 @@ Type bga Extends TBBType
 	End Method
 
 
-Field x,y,bg,bgnum,bgname$,sbg,sbgpath$,thumbimg,thumbgpath$,bgmusic,bgmusicpath$
+Field x,y,bg,bgnum,bgname$,sbg:TImage,sbgpath$,thumbimg:TImage,thumbgpath$,bgmusic:TSound,bgmusicpath$
 
 End Type
 
@@ -283,7 +283,7 @@ Type impctframe Extends TBBType
 	End Method
 
 
-Field fframe,fframe2,iid$,fnum
+Field fframe:TImage,fframe2:TImage,iid$,fnum
 
 
 End Type
