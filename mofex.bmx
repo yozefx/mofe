@@ -75,7 +75,7 @@ Global mainmmenu = createmainmenu()
 ' Your main screen draw loop 
 SetScale( 2,2) 
 
-Global FPSTIMER:TTIMER = CreateTimer(30) 
+Global FPSTIMER:TTIMER = CreateTimer(40) 
 While Not KeyHit(KEY_F12)
 WaitTimer(FPSTIMER)
 '	Repeat

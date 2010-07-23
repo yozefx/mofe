@@ -20,7 +20,6 @@
 	extrn	___bb_jpgloader_jpgloader
 	extrn	___bb_macos_macos
 	extrn	___bb_map_map
-	extrn	___bb_mappy_mappy
 	extrn	___bb_maxlua_maxlua
 	extrn	___bb_maxml_maxml
 	extrn	___bb_maxutil_maxutil
@@ -126,7 +125,6 @@ _116:
 	call	___bb_freeprocess_freeprocess
 	call	___bb_glew_glew
 	call	___bb_macos_macos
-	call	___bb_mappy_mappy
 	call	___bb_maxml_maxml
 	push	_54
 	call	dword [_bbOnDebugEnterStm]
@@ -822,7 +820,7 @@ _86:
 	dd	_bb_VKEY
 	dd	0
 _55:
-	db	"C:/Documents and Settings/dv/mofe/bin/bbvkey.bmx",0
+	db	"C:/Users/nesnlan/mofe/bin/bbvkey.bmx",0
 	align	4
 _54:
 	dd	_55

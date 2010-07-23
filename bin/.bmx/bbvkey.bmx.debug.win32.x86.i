@@ -29,7 +29,6 @@ import pub.freejoy
 import pub.freeprocess
 import pub.glew
 import pub.macos
-import pub.mappy
 import pub.maxml
 VKeyDown%(key%)="bb_VKeyDown"
 VKeyHit%(key%)="bb_VKeyHit"

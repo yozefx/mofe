@@ -314,7 +314,14 @@ Function loadcharimages(p:player)
 		
 			DebugLog "loading: "+startdir$+"\Fighters\"+p.char.fname$+"\"+a.fanim$+i+".png"
 			a.frames[i-1] = LoadImage(startdir$+"\Fighters\"+p.char.fname$+"\"+a.fanim$+i+".png")
-		
+			Select a.fanim$
+			
+				Case "fball"
+					SetImageHandle(a.frames[i-1],ImageWidth(a.frames[i-1])/2,ImageHeight(a.frames[i-1])/2)
+					
+				Case "fballx"
+					SetImageHandle(a.frames[i-1],ImageWidth(a.frames[i-1])/2,ImageHeight(a.frames[i-1])/2)
+			End Select
 		
 		Next
 	

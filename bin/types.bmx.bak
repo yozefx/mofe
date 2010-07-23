@@ -43,24 +43,23 @@ Field fireb$,firebx$,dash$,dashx$,spec$,specx$,fatal$,password$,selb,sels,jumphe
 End Type
 
 
+
+
+
 Type fight Extends TBBType
 'selection screen fighter base
 	Method New()
-		Add(fight_list)
+		ListAddLast(fight_list,Self)
 	End Method
 
-	Method After:fight()
-		Local t:TLink
-		t=_link.NextLink()
-		If t Return fight(t.Value())
+	Method Remove()
+		
+		ListRemove(fight_list,Self)
+	
 	End Method
 
-	Method Before:fight()
-		Local t:TLink
-		t=_link.PrevLink()
-		If t Return fight(t.Value())
-	End Method
 
+	Field anim_list:TList = New TList
 
 Field vit,spd,def,pow,spr,will,x,y,team,tlife,mlife,tmlife,plife#,fanimating,energy,ctime,bfball,bfballa,halign
 Field fname$,spoints,fid$,fighternum,expts,ftname$,fanim$,direction,fstatus$,jtype$,hurt,dtaken,tftaken#
@@ -96,20 +95,15 @@ End Type
 
 Type animdata Extends TBBType
 'Frames of fighters anims
-	Method New()
-		Add(animdata_list)
-	End Method
 
-	Method After:animdata()
-		Local t:TLink
-		t=_link.NextLink()
-		If t Return animdata(t.Value())
-	End Method
+	Field frames:TImage[]
 
-	Method Before:animdata()
-		Local t:TLink
-		t=_link.PrevLink()
-		If t Return animdata(t.Value())
+	
+	Method Setframes(num)
+	
+		Local f:TImage[num]
+		frames = f
+	
 	End Method
 
 

@@ -131,6 +131,7 @@ Type player Extends TBBType
 	End Method
 
 
+
 Field colred,colgreen,colblue,teamnum,playernum,selectedfighter,fightername$,selx,sely,etype,Stream:TStream,pause,spoints,halign,playerObj:TGNetObject
 Field playertype$,datafile$,team,direction,x,y,tx,ty,scrolly,scrollx,fmode$,introfin,movestring$,bkeydwn,mtimer,bmtimer,fid$,getbgs,fightloaded
 Field descrnd,descision$,desctime,desccd,descdir,oppx,ooldx,closeup,lost,vic,winner,netid,netname$,netplayer,spectag,oldpx,char:fight
@@ -179,6 +180,8 @@ Type fballa Extends TBBType
 		If t Return fballa(t.Value())
 	End Method
 
+	Field parent:player
+	Field animset:animdata
 
 Field x,y,colx,coly,fball,fbframe,direction,id,bcreatef,nof,fid$,frate,antime,framenum,life,hitf,team,pow,ptype$
 
