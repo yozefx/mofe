@@ -20,7 +20,6 @@
 	extrn	___bb_jpgloader_jpgloader
 	extrn	___bb_macos_macos
 	extrn	___bb_map_map
-	extrn	___bb_mappy_mappy
 	extrn	___bb_maxlua_maxlua
 	extrn	___bb_maxml_maxml
 	extrn	___bb_maxutil_maxutil
@@ -114,7 +113,6 @@ _81:
 	call	___bb_freeprocess_freeprocess
 	call	___bb_glew_glew
 	call	___bb_macos_macos
-	call	___bb_mappy_mappy
 	call	___bb_maxml_maxml
 	push	_bb_TBBType
 	call	_bbObjectRegisterType
@@ -862,7 +860,7 @@ _113:
 	dd	-8
 	dd	0
 _93:
-	db	"C:/Documents and Settings/dv/mofe/bin/bbtype.bmx",0
+	db	"C:/Users/nesnlan/mofe/bin/bbtype.bmx",0
 	align	4
 _92:
 	dd	_93

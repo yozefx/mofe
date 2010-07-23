@@ -648,23 +648,23 @@ End Function
 
 Function controlfballs(p:player)
 	For x:fballa = EachIn fballa_list
-		If x.fid$ = p.char.fid$ Then
-			If p.char.spectag = False Then
-			Select x.direction
-			
-			Case 0
-			x.x = x.x + (p.char.spd*ENGINESCALE#)
-			
-			Case 1
-			x.x = x.x - (p.char.spd*ENGINESCALE#)
-			
-			End Select
-			x.life = x.life - 1
+		'If x.parent = p Then
+			If x.parent.char.spectag = False Then
+				Select x.direction
+				
+					Case 0
+						x.x = x.x + (x.parent.char.spd*ENGINESCALE#)
+					
+					Case 1
+						x.x = x.x - (x.parent.char.spd*ENGINESCALE#)
+				
+				End Select
+				x.life = x.life - 1
 			EndIf
 			x.antime = x.antime + 1
 			If x.antime >= x.frate Then
-			x.antime = 0
-			x.framenum = x.framenum + 1
+				x.antime = 0
+				x.framenum = x.framenum + 1
 			EndIf
 			'If x\framenum = x\hitf Then
 			
@@ -682,73 +682,73 @@ Function controlfballs(p:player)
 
 			'EndIf
 			
-			
+			If x.framenum = 0 Then x.framenum = 1
 			If x.framenum >= x.nof Then x.framenum = 1
 			
-			For q:fbframe = EachIn fbframe_list
+			'For q:fbframe = EachIn fbframe_list
 			
-			If q.id = x.id And q.fnum = x.framenum Then
-			Select x.direction
+				'If q.id = x.id And q.fnum = x.framenum Then
+				Select x.direction
+				
+					Case 0
+						SetBlend(LIGHTBLEND)
+						
+						SetAlpha(0.25)
+						
+						DrawImage x.animset.frames[x.framenum-1],x.x-15,x.y
+						SetAlpha(0.5)
+						
+						DrawImage x.animset.frames[x.framenum-1],x.x-10,x.y
+						SetAlpha(0.75)
+						
+						DrawImage x.animset.frames[x.framenum-1],x.x-5,x.y
+						SetAlpha(0.90)
+						DrawImage x.animset.frames[x.framenum-1],x.x,x.y
+						SetBlend(ALPHABLEND)
+						SetAlpha(1)
+						SetColor(255,0,0)
+						DrawRect coll.x,coll.y,coll.colx,coll.coly
+						SetColor(255,255,255)
+					
+					Case 1
+						SetScale(-ENGINESCALE#,ENGINESCALE#)
+						SetBlend(LIGHTBLEND)
+						SetAlpha(0.25)
+						DrawImage x.animset.frames[x.framenum-1],x.x+15,x.y
+						SetAlpha(0.5)			
+						DrawImage x.animset.frames[x.framenum-1],x.x+10,x.y
+						SetAlpha(0.75)
 			
-			Case 0
-			SetBlend(LIGHTBLEND)
+						DrawImage x.animset.frames[x.framenum-1],x.x+5,x.y
 			
-			SetAlpha(0.25)
+						SetAlpha(0.90)
+						DrawImage x.animset.frames[x.framenum-1],x.x,x.y
+						SetBlend(ALPHABLEND)
+						SetAlpha(1)
+						SetScale(ENGINESCALE#,ENGINESCALE#)
+						SetColor(255,0,0)
+						DrawRect coll.x,coll.y,coll.colx,coll.coly
+						SetColor(255,255,255)
+				
+				End Select
+	
+				'EndIf
+				'If q.id = x.id Then
+				'If x.life <= 0 Then 
+	'			FreeImage q\fball'
+	'			FreeImage q\fball2
+				'q.Remove()
+				'EndIf
+				'EndIf
+			'Next
 			
-			DrawImage q.fball,x.x-15,x.y
-			SetAlpha(0.5)
 			
-			DrawImage q.fball,x.x-10,x.y
-			SetAlpha(0.75)
-			
-			DrawImage q.fball,x.x-5,x.y
-			SetAlpha(0.90)
-			DrawImage q.fball,x.x,x.y
-			SetBlend(ALPHABLEND)
-			SetAlpha(1)
-			SetColor(255,0,0)
-			DrawRect coll.x,coll.y,coll.colx,coll.coly
-			SetColor(255,255,255)
-			
-			Case 1
-			SetScale(-ENGINESCALE#,ENGINESCALE#)
-			SetBlend(LIGHTBLEND)
-			SetAlpha(0.25)
-			DrawImage q.fball,x.x+15,x.y
-			SetAlpha(0.5)			
-			DrawImage q.fball,x.x+10,x.y
-			SetAlpha(0.75)
-
-			DrawImage q.fball,x.x+5,x.y
-
-			SetAlpha(0.90)
-			DrawImage q.fball,x.x,x.y
-			SetBlend(ALPHABLEND)
-			SetAlpha(1)
-			SetScale(ENGINESCALE#,ENGINESCALE#)
-			SetColor(255,0,0)
-			DrawRect coll.x,coll.y,coll.colx,coll.coly
-			SetColor(255,255,255)
-			
-			End Select
-
-			EndIf
-			If q.id = x.id Then
 			If x.life <= 0 Then 
-'			FreeImage q\fball'
-'			FreeImage q\fball2
-			q.Remove()
-			EndIf
-			EndIf
-			Next
-			
-			
-			If x.life <= 0 Then 
-			x.Remove
+				x.Remove()
 			EndIf
 
 
-		EndIf
+		'EndIf
 	Next
 
 End Function
@@ -1748,26 +1748,29 @@ End Select
 
 x.id = Rnd(1,10000)
 p.char.bfball = False
-x.nof = a.nof
+
 x.frate = a.frate / 2
 x.hitf = a.fhitf
 x.team = p.team
 x.pow = p.char.pow * 2
 
-For q:frame = EachIn frame_list
-For pooptemp = 0 To 20
-If q.fanim$ = "fball" And q.fid$ = p.char.fid$ And q.fnum = pooptemp Then
-v:fbframe = New fbframe
-v.id = x.id
-v.fnum = pooptemp
-v.fball = q.fframe
-'v.fball2 = CopyImage(q\fframe2)
-'MaskImage v\fball,255,0,255
-'MaskImage v\fball2,255,0,255
-SetImageHandle(v.fball,ImageWidth(v.fball)/2,ImageHeight(v.fball)/2)
-'MidHandle v\fball2
-EndIf
-Next
+For a:animdata = EachIn p.char.anim_list
+	'For pooptemp = 0 To 20
+	If a.fanim$ = "fball" Then
+		x.animset = a
+		x.parent = p
+		x.nof = a.nof
+		'v:fbframe = New fbframe
+		'v.id = x.id
+		'v.fnum = pooptemp
+		'v.fball = q.fframe
+		'v.fball2 = CopyImage(q\fframe2)
+		'MaskImage v\fball,255,0,255
+		'MaskImage v\fball2,255,0,255
+		'SetImageHandle(v.fball,ImageWidth(v.fball)/2,ImageHeight(v.fball)/2)
+		'MidHandle v\fball2
+	EndIf
+	'Next
 Next
 EndIf
 
@@ -1794,26 +1797,30 @@ End Select
 
 x.id = Rnd(1,10000)
 p.char.bfball = False
-x.nof = a.nof
+
 x.frate = a.frate / 2
 x.hitf = a.fhitf
 x.pow = p.char.pow * 4
-For q:frame = EachIn frame_list
-For pooptemp = 0 To 20
-If q.fanim$ = "fballx" And q.fid$ = p.char.fid$ And q.fnum = pooptemp Then
-v:fbframe = New fbframe
-v.id = x.id
-v.fnum = pooptemp
-v.fball = q.fframe
-'v\fball2 = CopyImage(q\fframe2)
-SetImageHandle(v.fball,ImageWidth(v.fball)/2,ImageHeight(v.fball)/2)
-
-'MaskImage v\fball,255,0,255
-'MaskImage v\fball2,255,0,255
-'MidHandle v\fball
-'MidHandle v\fball2
-EndIf
-Next
+For a:animdata = EachIn p.char.anim_list
+	'For pooptemp = 0 To 20
+	
+	If a.fanim$ = "fballx" Then
+		x.animset = a
+		x.parent = p
+		x.nof = a.nof
+		'v:fbframe = New fbframe
+		'v.id = x.id
+		'v.fnum = pooptemp
+		'v.fball = q.fframe
+		'v\fball2 = CopyImage(q\fframe2)
+		'SetImageHandle(v.fball,ImageWidth(v.fball)/2,ImageHeight(v.fball)/2)
+		
+		'MaskImage v\fball,255,0,255
+		'MaskImage v\fball2,255,0,255
+		'MidHandle v\fball
+		'MidHandle v\fball2
+	EndIf
+	'Next
 Next
 EndIf
 

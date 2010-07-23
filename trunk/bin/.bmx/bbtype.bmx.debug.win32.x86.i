@@ -29,7 +29,6 @@ import pub.freejoy
 import pub.freeprocess
 import pub.glew
 import pub.macos
-import pub.mappy
 import pub.maxml
 TBBType^brl.blitz.Object{
 ._list:brl.linkedlist.TList&
