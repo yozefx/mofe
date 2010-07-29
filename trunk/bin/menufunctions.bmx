@@ -2538,81 +2538,90 @@ End Function
 Function getimpacts()
 
 
-' i broke this down into three types For impacts And some other things like fballs
-' this Type is just To store the main types of impacts And some Default properties For them
-i:impact = New impact
-i.iid$ = "bimpact"
-i:impact = New impact
-i.iid$ = "simpact"
-i:impact = New impact
-i.iid$ = "wimpact"
-i:impact = New impact
-i.iid$ = "charge"
-Print "created impact types"
-
-'Right here im checking the sprites directory For any image files To load all the impact frames
-tempdir=ReadDir(startdir$+"\sprites\")
-tempfile$ = "poop"
-Repeat
-tempfile$=NextFile$(tempdir)
-Print "tempfile: "+tempfile$+startdir$+"\sprites\" 
-'If tempdir finds a png file it will load it.. otherwise its skipped
-If Instr(Lower(tempfile$),".png",1) <> 0 Then
-'im only gonna allow 20 frames in an animation.. mainly because the loading time will take For ever To load
-'more than 20 frames on each animation
-For tempnum = 1 To 20
-'checking To see what frame number the image is
-If Instr(tempfile$,tempnum,1) <> 0 Then
-'grabbing the name of the animation.. this way If the file matches up To an impact Type it will play.. 
-'otherwise the image wont be used
-animtemp2$ = Lower(Replace(tempfile$,tempnum,""))
-
-For i:impact = EachIn impact_list
-If Instr(animtemp2$,i.iid$,1) <> 0 Then
-'here we create an animation Type For the animation it matches with
-u:impctframe = New impctframe
-'now we actually load that frame into the memory as an animation frames
-u.fframe = LoadImage(startdir$+"\sprites\"+tempfile$)
-'MaskImage u\fframe,255,0,255
-'masking the image
+	' i broke this down into three types For impacts And some other things like fballs
+	' this Type is just To store the main types of impacts And some Default properties For them
+	i:impact = New impact
+	i.iid$ = "bimpact"
+	i.getframes()
+	i:impact = New impact
+	i.iid$ = "simpact"
+	i.getframes()
+	i:impact = New impact
+	i.iid$ = "wimpact"
+	i.getframes()
+	i:impact = New impact
+	i.iid$ = "charge"
+	i.getframes()
+	
+	Print "created impact types"
 
 
-' here what im doing is taking that same image And FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipping it so it can be displayed If the impact is facing
-'the other direction
-'u.fframe2 = CopyImage(u\fframe)
-'MaskImage u\fframe2,255,0,255
-'resizextemp1 = 0 - ImageWidth(u\fframe)
-'ResizeImage u\fframe2,resizextemp1,ImageHeight(u\fframe)
-'here im adding this in as a loop To display a loading screen While im grabbing all those images
-Cls
-SetScale( 2,2 )
-SetImageFont(fntArialA)
-DrawImage mainload,0,0
-'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
-DrawText "Loading: Impact GFX "+tempfile$,0,0
-'a debug code
-'If maindebug = True Then 
-Print startdir$+"\sprites\"+tempfile$
-Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
-SetScale( 1,1 )
-u.iid$ = i.iid$
-u.fnum = tempnum
-'just making sure that when the last frame loads.. that IS the last frame used
-If tempnum > i.nof Then i.nof = tempnum
-EndIf
+	
 
-Next
-EndIf
-Next
-EndIf
-If tempfile$="" Then 
-Print "all done exiting function"
-Return
-
-EndIf
-'exits the main loading loop once we run out of files To load 
-Forever
-
+	Rem
+	'Right here im checking the sprites directory For any image files To load all the impact frames
+	tempdir=ReadDir(startdir$+"\sprites\")
+	tempfile$ = "poop"
+	Repeat
+	tempfile$=NextFile$(tempdir)
+	Print "tempfile: "+tempfile$+startdir$+"\sprites\" 
+	'If tempdir finds a png file it will load it.. otherwise its skipped
+	If Instr(Lower(tempfile$),".png",1) <> 0 Then
+	'im only gonna allow 20 frames in an animation.. mainly because the loading time will take For ever To load
+	'more than 20 frames on each animation
+	For tempnum = 1 To 20
+	'checking To see what frame number the image is
+	If Instr(tempfile$,tempnum,1) <> 0 Then
+	'grabbing the name of the animation.. this way If the file matches up To an impact Type it will play.. 
+	'otherwise the image wont be used
+	animtemp2$ = Lower(Replace(tempfile$,tempnum,""))
+	
+	For i:impact = EachIn impact_list
+	If Instr(animtemp2$,i.iid$,1) <> 0 Then
+	'here we create an animation Type For the animation it matches with
+	u:impctframe = New impctframe
+	'now we actually load that frame into the memory as an animation frames
+	u.fframe = LoadImage(startdir$+"\sprites\"+tempfile$)
+	'MaskImage u\fframe,255,0,255
+	'masking the image
+	
+	
+	' here what im doing is taking that same image And FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipping it so it can be displayed If the impact is facing
+	'the other direction
+	'u.fframe2 = CopyImage(u\fframe)
+	'MaskImage u\fframe2,255,0,255
+	'resizextemp1 = 0 - ImageWidth(u\fframe)
+	'ResizeImage u\fframe2,resizextemp1,ImageHeight(u\fframe)
+	'here im adding this in as a loop To display a loading screen While im grabbing all those images
+	Cls
+	SetScale( 2,2 )
+	SetImageFont(fntArialA)
+	DrawImage mainload,0,0
+	'Color Rnd(1,255),Rnd(1,255),Rnd(1,255)
+	DrawText "Loading: Impact GFX "+tempfile$,0,0
+	'a debug code
+	'If maindebug = True Then 
+	Print startdir$+"\sprites\"+tempfile$
+	Flip 'nbg 'flipCanvas nbg 'FlipCanvas nbg 'flipCanvas nbg 'FlipCanvas nbg 'Flip
+	SetScale( 1,1 )
+	u.iid$ = i.iid$
+	u.fnum = tempnum
+	'just making sure that when the last frame loads.. that IS the last frame used
+	If tempnum > i.nof Then i.nof = tempnum
+	EndIf
+	
+	Next
+	EndIf
+	Next
+	EndIf
+	If tempfile$="" Then 
+	Print "all done exiting function"
+	Return
+	
+	EndIf
+	'exits the main loading loop once we run out of files To load 
+	Forever
+	End Rem
 End Function
 
 

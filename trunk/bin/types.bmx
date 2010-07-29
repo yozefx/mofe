@@ -231,8 +231,9 @@ Type tempimpact Extends TBBType
 		If t Return tempimpact(t.Value())
 	End Method
 
+	Field timpact:impact
 
-Field x,y,fanimating,nof,iid$,fnum,direction,shiste,frate,charframe,charx,chary
+	Field x,y,fanimating,nof,iid$,fnum,direction,shiste,frate,charframe,charx,chary
 
 
 End Type
@@ -255,8 +256,47 @@ Type impact Extends TBBType
 		If t Return impact(t.Value())
 	End Method
 
+	Field frame:impctframe[]
+	
+	
+	Method getframes()
+	
+		countframes()
+		Local fm:impctframe[frames]	
+		
+			For i = 1 To frames
+			
+				If fm[i-1] = Null Then
+					fm[i-1] = New impctframe
+					fm[i-1].fframe = LoadImage("sprites\"+iid$+i+".png")
+				Else
+					fm[i-1].fframe = LoadImage("sprites\"+iid$+i+".png")
+				EndIf
+			
+			Next
+		
+		frame = fm
+	
+	End Method
+	
+	Method countframes()
+	
+		frames = 0
+		For i = 1 To 20
+		
+			If FileType("sprites\"+iid$+i+".png") = 1 Then
+			
+				frames = frames + 1
+			
+			EndIf
+		
+		Next
+		nof = frames
+		Return frames
+	End Method
+	
 
-Field x,y,fanimating,nof,iid$,fnum,direction
+	Field x,y,fanimating,nof,iid$,fnum,direction,frames
 
 
 End Type
