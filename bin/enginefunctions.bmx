@@ -491,44 +491,45 @@ End Function
 
 
 Function drawspecialstart(p:player,a:animdata)
-If ENGINESTATUS$ <> "SPECIAL" Then p.fmode$ = ""
-If p.getbgs = True Then
-For i:impact = EachIn impact_list
-If i.iid$ = "charge" Then
-impacto:tempimpact = New tempimpact
-impacto.charframe = SPECIALFRAME
-impacto.charx = SPECFX
-impacto.chary = SPECFY
-Select p.direction
-
-
+	If ENGINESTATUS$ <> "SPECIAL" Then p.fmode$ = ""
+	If p.getbgs = True Then
+		For i:impact = EachIn impact_list
+			If i.iid$ = "charge" Then
+				impacto:tempimpact = New tempimpact
+				impacto.charframe = SPECIALFRAME
+				impacto.charx = SPECFX
+				impacto.chary = SPECFY
+				Select p.direction
+				
+				
 					Case 0
-					impacto.x = p.x
-					impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-					impacto.direction = p.direction
-					'p.x = p.x - 5
+						impacto.x = p.x
+						impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+						impacto.direction = p.direction
+						'p.x = p.x - 5
 					Case 1
-					impacto.x = p.x
-					impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-					impacto.direction = p.direction
-					'p.x = p.x + 5
-
-
-
-End Select
-impacto.fanimating = True
-impacto.fnum = 1
-impacto.nof = i.nof
-impacto.iid$ = i.iid$
-impacto.frate = 5
-EndIf
-Next
-
-p.getbgs = False
-EndIf
-'If p.fmode$ = "special" Then
-'TileImage overlay,0,0
-'EndIf
+						impacto.x = p.x
+						impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+						impacto.direction = p.direction
+						'p.x = p.x + 5
+				
+				
+				
+				End Select
+				impacto.fanimating = True
+				impacto.fnum = 1
+				impacto.nof = i.nof
+				impacto.iid$ = i.iid$
+				impacto.frate = 5
+				impacto.timpact = i
+			EndIf
+		Next
+		
+		p.getbgs = False
+	EndIf
+	'If p.fmode$ = "special" Then
+	'TileImage overlay,0,0
+	'EndIf
 
 End Function
 
@@ -589,61 +590,62 @@ End Function
 
 Function controlimpacts()
 
-For impacto:tempimpact = EachIn tempimpact_list
-
-
-If impacto.fanimating = True Then
-If impacto.frate <= 0 Then
-impacto.frate = 3
-EndIf
-impacto.shiste = impacto.shiste + 1
-If impacto.shiste > impacto.frate Then
-impacto.fnum = impacto.fnum + 1
-impacto.shiste = 0
-EndIf
-If impacto.fnum > impacto.nof Then
-impacto.fanimating = False
-If impacto.iid$ = "charge" Then
-ENGINESTATUS$ = "FIGHT"
-
-EndIf
-EndIf
-
-For u:impctframe = EachIn impctframe_list
-If u.fnum = impacto.fnum And u.iid$ = impacto.iid$ Then
-SetBlend(LIGHTBLEND)
-Select impacto.direction
-
-Case 0
-'If impacto.iid$ = "charge" Then
-'DrawImage impacto.charframe,impacto.charx,impacto.chary
-'EndIf
-
-SetScale(-ENGINESCALE#,ENGINESCALE#)
-DrawImage u.fframe,impacto.x+ImageWidth(u.fframe),impacto.y
-SetScale(ENGINESCALE#,ENGINESCALE#)
-Case 1
-'If impacto.iid$ = "charge" Then
-'DrawImage impacto.charframe,impacto.charx,impacto.chary
-'EndIf
-DrawImage u.fframe,impacto.x-ImageWidth(u.fframe),impacto.y
-
-End Select
-EndIf
-Next
-
-Else
-
-';FreeImage u\fframe
-';FreeImage u\fframe2
-impacto.Remove
-';Delete u
-EndIf
-
-
-
-Next
-SetBlend(ALPHABLEND)
+	For impacto:tempimpact = EachIn tempimpact_list
+	
+	
+		If impacto.fanimating = True Then
+			If impacto.frate <= 0 Then
+				impacto.frate = 3
+			EndIf
+			impacto.shiste = impacto.shiste + 1
+			If impacto.shiste > impacto.frate Then
+				impacto.fnum = impacto.fnum + 1
+				impacto.shiste = 0
+			EndIf
+			If impacto.fnum > impacto.nof Then
+				impacto.fanimating = False
+				If impacto.iid$ = "charge" Then
+					ENGINESTATUS$ = "FIGHT"
+		
+				EndIf
+			Else
+		
+			'For u:impctframe = EachIn impctframe_list
+				'If u.fnum = impacto.fnum And u.iid$ = impacto.iid$ Then
+					SetBlend(LIGHTBLEND)
+					Select impacto.direction
+		
+						Case 0
+							'If impacto.iid$ = "charge" Then
+							'DrawImage impacto.charframe,impacto.charx,impacto.chary
+							'EndIf
+		
+							SetScale(-ENGINESCALE#,ENGINESCALE#)
+							DrawImage impacto.timpact.frame[impacto.fnum-1].fframe,impacto.x+ImageWidth(impacto.timpact.frame[impacto.fnum-1].fframe),impacto.y
+							SetScale(ENGINESCALE#,ENGINESCALE#)
+						Case 1
+							'If impacto.iid$ = "charge" Then
+							'DrawImage impacto.charframe,impacto.charx,impacto.chary
+							'EndIf
+							DrawImage impacto.timpact.frame[impacto.fnum-1].fframe,impacto.x-ImageWidth(impacto.timpact.frame[impacto.fnum-1].fframe),impacto.y
+		
+					End Select
+				'EndIf
+			EndIf
+			'Next
+		
+		Else
+		
+			';FreeImage u\fframe
+			';FreeImage u\fframe2
+			impacto.Remove
+			';Delete u
+		EndIf
+	
+	
+	
+	Next
+	SetBlend(ALPHABLEND)
 End Function
 
 Function controlfballs(p:player)
@@ -1512,214 +1514,226 @@ End Function
 
 Function hitcollbox(coll:collbox,p:player,a:animdata)
 
-If coll.fid$ <> "" Then
-If coll.team <> p.team Then
-Select p.direction
-	
-	Case 0
-	
-		If RectsOverlap(p.tx,p.ty+(a.fdcoly*ENGINESCALE#),(a.fdcolx*ENGINESCALE#),(a.fheight*ENGINESCALE#)-(a.fdcoly*ENGINESCALE#),coll.x,coll.y,coll.colx,coll.coly) Then
-			If p.char.hurt = False Then
-				If checkkeydowntype(p.team,"left") = False Then
-					p.bmtimer = True
-					Select p.char.fstatus$
-					
-					Case "jump"
-					p.char.fanim$ = "lose"
-					
-					Case "crouch"
-					p.char.fanim$ = "churt"
-					
-					Default
-					p.char.fanim$ = "hurt"
-					
-					End Select
-				p.char.hurt = True
-				p.char.jup = False
-				PlaySound whitsnd
-				'f\fstatus$ = "hurt"
-				p.char.dashing = False
-				p.char.fanimating = True
-
-					If p.etype = 1 Then
-					p.char.energy = p.char.energy + 15
-					If p.char.energy >= 175 Then p.char.energy = 175
-					EndIf
-				p.char.tmlife = p.char.tmlife - coll.damage / 2
-				p.char.dtaken = p.char.dtaken + coll.damage / 2
-				p.char.tftaken# = Float(p.char.dtaken) / Float(p.char.mlife) * 236
-				If p.char.tftaken# >= 236 Then p.char.tftaken# = 236
-				p.char.plife# = Float(p.char.tmlife) / Float(p.char.mlife) * 236
-
-					For i:impact = EachIn impact_list
-					If i.iid$ = "simpact" Then
-					impacto:tempimpact = New tempimpact
-					Select p.direction
-					Case 0
-					impacto.x = p.x
-					impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-					impacto.direction = p.direction
-					p.x = p.x - 5
-					Case 1
-					impacto.x = p.x
-					impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-					impacto.direction = p.direction
-					p.x = p.x + 5
-					End Select
-					impacto.fanimating = True
-					impacto.fnum = 1
-					impacto.nof = i.nof
-					impacto.iid$ = i.iid$
-					EndIf
-					Next
-				Else
-
-				PlaySound blocksnd
-				p.char.fanim$ = "block"
-				p.char.fstatus$ = "block"
-				p.char.fanimating = True
-
-
-					For i:impact = EachIn impact_list
-					If i.iid$ = "bimpact" Then
-					impacto:tempimpact = New tempimpact
-					Select p.direction
-					Case 0
-					impacto.x = p.x
-					impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-					impacto.direction = p.direction
-					p.x = p.x - 5
-					Case 1
-					impacto.x = p.x
-					impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-					impacto.direction = p.direction
-					p.x = p.x + 5
-					End Select
-					impacto.fanimating = True
-					impacto.fnum = 1
-					impacto.nof = i.nof
-					impacto.iid$ = i.iid$
-					EndIf
-					Next
-					
-					If p.etype = 1 Then
-					p.char.energy = p.char.energy + 1
-					If p.char.energy >= 175 Then p.char.energy = 175
-					EndIf
-
-				EndIf
-
-			EndIf
-
-		EndIf
+	If coll.fid$ <> "" Then
+	If coll.team <> p.team Then
+	Select p.direction
 		
+		Case 0
 		
-	Case 1
-		If RectsOverlap(p.tx-(a.fdcolx*ENGINESCALE#),p.ty+(a.fdcoly*ENGINESCALE#),(a.fdcolx*ENGINESCALE#),(a.fheight*ENGINESCALE#)-(a.fdcoly*ENGINESCALE#),coll.x,coll.y,coll.colx,coll.coly) Then
-			If p.char.hurt = False Then
-				If checkkeydowntype(p.team,"right") = False Then
-			
-				p.bmtimer = True
-
-					Select p.char.fstatus$
-					
-					Case "jump"
-					p.char.fanim$ = "churt"
-					
-					Case "crouch"
-					p.char.fanim$ = "churt"
-					
-					
-					Default
-					p.char.fanim$ = "hurt"
-					
-					End Select
-					
-					p.char.hurt = True
-					PlaySound whitsnd
-					'f\fstatus$ = "hurt"
-					p.char.dashing = False
-					p.char.jup = False
-						If p.etype = 1 Then
-						p.char.energy = p.char.energy + 15
-						If p.char.energy >= 175 Then p.char.energy = 175
-						EndIf
-					p.char.fanimating = True
-					p.char.tmlife = p.char.tmlife - coll.damage / 2
-					p.char.plife# = Float(p.char.tmlife) / Float(p.char.mlife) * 236
-					p.char.dtaken = p.char.dtaken + coll.damage / 2
-					p.char.tftaken# = Float(p.char.dtaken) / Float(p.char.mlife) * 236
-
-					If p.char.tftaken# >= 236 Then p.char.tftaken# = 236
-						For i:impact = EachIn impact_list
-						If i.iid$ = "simpact" Then
-						impacto:tempimpact = New tempimpact
-						Select p.direction
-						Case 0
-						impacto.x = p.x + (a.fhcolx*ENGINESCALE#)
-						impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-						impacto.direction = p.direction
+			If RectsOverlap(p.tx,p.ty+(a.fdcoly*ENGINESCALE#),(a.fdcolx*ENGINESCALE#),(a.fheight*ENGINESCALE#)-(a.fdcoly*ENGINESCALE#),coll.x,coll.y,coll.colx,coll.coly) Then
+				If p.char.hurt = False Then
+					If checkkeydowntype(p.team,"left") = False Then
+						p.bmtimer = True
+						Select p.char.fstatus$
 						
-						Case 1
-						impacto.x = p.x - (a.fhcolx*ENGINESCALE#)
-						impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-						impacto.direction = p.direction
-						
-						End Select
-						impacto.fanimating = True
-						impacto.fnum = 1
-						impacto.nof = i.nof
-						impacto.iid$ = i.iid$
-						EndIf
-						Next
-
-
-				Else
+							Case "jump"
+								p.char.fanim$ = "lose"
 							
-						For i:impact = EachIn impact_list
-						If i.iid$ = "bimpact" Then
-						impacto:tempimpact = New tempimpact
-						Select p.direction
-						Case 0
-						impacto.x = p.x + (a.fhcolx*ENGINESCALE#)
-						impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-						impacto.direction = p.direction
-						
-						Case 1
-						impacto.x = p.x - (a.fhcolx*ENGINESCALE#)
-						impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
-						impacto.direction = p.direction
+							Case "crouch"
+								p.char.fanim$ = "churt"
+							
+							Default
+								p.char.fanim$ = "hurt"
 						
 						End Select
-						impacto.fanimating = True
-						impacto.fnum = 1
-						impacto.nof = i.nof
-						impacto.iid$ = i.iid$
-						EndIf
-						Next
-					PlaySound blocksnd
-					p.char.fanim$ = "block"
-					p.char.fstatus$ = "block"
-					p.char.fanimating = True
+						p.char.hurt = True
+						p.char.jup = False
+						PlaySound whitsnd
+						'f\fstatus$ = "hurt"
+						p.char.dashing = False
+						p.char.fanimating = True
+	
 						If p.etype = 1 Then
-						p.char.energy = p.char.energy + 1
-						If p.char.energy >= 175 Then p.char.energy = 175
+							p.char.energy = p.char.energy + 15
+							If p.char.energy >= 175 Then p.char.energy = 175
 						EndIf
+						p.char.tmlife = p.char.tmlife - coll.damage / 2
+						p.char.dtaken = p.char.dtaken + coll.damage / 2
+						p.char.tftaken# = Float(p.char.dtaken) / Float(p.char.mlife) * 236
+						If p.char.tftaken# >= 236 Then p.char.tftaken# = 236
+							p.char.plife# = Float(p.char.tmlife) / Float(p.char.mlife) * 236
 		
+							For i:impact = EachIn impact_list
+								Select i.iid$
+									Case "simpact"
+										impacto:tempimpact = New tempimpact
+										Select p.direction
+											Case 0
+												impacto.x = p.x
+												impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+												impacto.direction = p.direction
+												p.x = p.x - 5
+											Case 1
+												impacto.x = p.x
+												impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+												impacto.direction = p.direction
+												p.x = p.x + 5
+										End Select
+										impacto.fanimating = True
+										impacto.fnum = 1
+										impacto.nof = i.nof
+										impacto.iid$ = i.iid$
+										impacto.timpact = i
+									
+									
+									
 										
+								End Select
+							Next
+						Else
+	
+							PlaySound blocksnd
+							p.char.fanim$ = "block"
+							p.char.fstatus$ = "block"
+							p.char.fanimating = True
+	
+	
+						For i:impact = EachIn impact_list
+							Select i.iid$
+								Case "bimpact"
+									impacto:tempimpact = New tempimpact
+									Select p.direction
+										Case 0
+											impacto.x = p.x
+											impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+											impacto.direction = p.direction
+											p.x = p.x - 5
+										Case 1
+											impacto.x = p.x
+											impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+											impacto.direction = p.direction
+											p.x = p.x + 5
+									End Select
+									impacto.fanimating = True
+									impacto.fnum = 1
+									impacto.nof = i.nof
+									impacto.iid$ = i.iid$
+									impacto.timpact = i
+							End Select
+						Next
+						
+						If p.etype = 1 Then
+							p.char.energy = p.char.energy + 1
+							If p.char.energy >= 175 Then p.char.energy = 175
+						EndIf
+	
+					EndIf
+	
+				EndIf
+	
+			EndIf
+			
+			
+		Case 1
+			If RectsOverlap(p.tx-(a.fdcolx*ENGINESCALE#),p.ty+(a.fdcoly*ENGINESCALE#),(a.fdcolx*ENGINESCALE#),(a.fheight*ENGINESCALE#)-(a.fdcoly*ENGINESCALE#),coll.x,coll.y,coll.colx,coll.coly) Then
+				If p.char.hurt = False Then
+					If checkkeydowntype(p.team,"right") = False Then
 				
+						p.bmtimer = True
+	
+						Select p.char.fstatus$
+						
+							Case "jump"
+								p.char.fanim$ = "churt"
+							
+							Case "crouch"
+								p.char.fanim$ = "churt"
+							
+							
+							Default
+								p.char.fanim$ = "hurt"
+						
+						End Select
+						
+						p.char.hurt = True
+						PlaySound whitsnd
+						'f\fstatus$ = "hurt"
+						p.char.dashing = False
+						p.char.jup = False
+						If p.etype = 1 Then
+							p.char.energy = p.char.energy + 15
+							If p.char.energy >= 175 Then p.char.energy = 175
+						EndIf
+						p.char.fanimating = True
+						p.char.tmlife = p.char.tmlife - coll.damage / 2
+						p.char.plife# = Float(p.char.tmlife) / Float(p.char.mlife) * 236
+						p.char.dtaken = p.char.dtaken + coll.damage / 2
+						p.char.tftaken# = Float(p.char.dtaken) / Float(p.char.mlife) * 236
+	
+						If p.char.tftaken# >= 236 Then p.char.tftaken# = 236
+							For i:impact = EachIn impact_list
+								Select i.iid$
+									Case "simpact"
+										impacto:tempimpact = New tempimpact
+										Select p.direction
+											Case 0
+												impacto.x = p.x + (a.fhcolx*ENGINESCALE#)
+												impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+												impacto.direction = p.direction
+											
+											Case 1
+												impacto.x = p.x - (a.fhcolx*ENGINESCALE#)
+												impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+												impacto.direction = p.direction
+										
+										End Select
+										impacto.fanimating = True
+										impacto.fnum = 1
+										impacto.nof = i.nof
+										impacto.iid$ = i.iid$
+										impacto.timpact = i
+								End Select
+							Next
+	
+	
+						Else
+								
+							For i:impact = EachIn impact_list
+								Select i.iid$
+									Case "bimpact"
+										impacto:tempimpact = New tempimpact
+										Select p.direction
+											Case 0
+												impacto.x = p.x + (a.fhcolx*ENGINESCALE#)
+												impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+												impacto.direction = p.direction
+											
+											Case 1
+												impacto.x = p.x - (a.fhcolx*ENGINESCALE#)
+												impacto.y = p.ty + (a.fhcoly*ENGINESCALE#)
+												impacto.direction = p.direction
+										
+										End Select
+										impacto.fanimating = True
+										impacto.fnum = 1
+										impacto.nof = i.nof
+										impacto.iid$ = i.iid$
+										impacto.timpact = i
+								End Select
+							Next
+							PlaySound blocksnd
+							p.char.fanim$ = "block"
+							p.char.fstatus$ = "block"
+							p.char.fanimating = True
+							If p.etype = 1 Then
+								p.char.energy = p.char.energy + 1
+								If p.char.energy >= 175 Then p.char.energy = 175
+							EndIf
+			
+											
+					
+					EndIf
 				EndIf
 			EndIf
-		EndIf
-	End Select
-EndIf
-SetColor 0,0,255
-'DrawRect coll.x,coll.y,coll.colx,coll.coly
-SetColor 255,255,255
-coll.life = coll.life - 1
-If coll.life <= 0 Then coll.Remove()
-
-EndIf			
+		End Select
+	EndIf
+		SetColor 0,0,255
+		'DrawRect coll.x,coll.y,coll.colx,coll.coly
+		SetColor 255,255,255
+		coll.life = coll.life - 1
+		If coll.life <= 0 Then coll.Remove()
+	
+	EndIf			
 
 
 End Function
